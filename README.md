@@ -1,1 +1,3 @@
-# Rendu_TP_Leo
+# Rendu de TP
+
+Voici la liste des TP (dossiers) :
