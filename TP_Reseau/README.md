@@ -35,7 +35,7 @@ En utilisant la ligne de commande (CLI) de votre OS :
 
 **🌞 Affichez les infos des cartes réseau de votre PC**
 
-```
+```bash
 $ ip a
 eno1: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc fq_codel state DOWN group default qlen 1000
     link/ether 88:a4:c2:ac:a8:2b brd ff:ff:ff:ff:ff:ff
@@ -50,7 +50,7 @@ wlp4s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group 
 
 **🌞 Affichez votre gateway**
 
-```
+```bash
 $ route -n
 Kernel IP routing table
 Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
@@ -60,7 +60,7 @@ Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 
 **🌞 Déterminer la MAC de la passerelle**
 
-```
+```bash
 $ arp
 Address                  HWtype  HWaddress           Flags Mask            Iface
 _gateway                 ether   00:c0:e7:e0:04:4e   C                     wlp4s0
@@ -81,7 +81,7 @@ Sous KDE Plasma donc impossible :+1:
 
 🌞 Utilisez l'interface graphique de votre OS pour **changer d'adresse IP** :
 
-![Uploading file..._w4h84x1qb]()
+![](https://i.imgur.com/XYJBND8.png)
 
 
 🌞 **Il est possible que vous perdiez l'accès internet.** 
@@ -97,7 +97,7 @@ L'adresse IP que j'ai saisie doit être déjà utilisée.
 
 
 🌞 **Vérifier à l'aide d'une commande que votre IP a bien été changée**
-```
+```bash
 $ ip a
 eno1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
     link/ether 88:a4:c2:ac:a8:2b brd ff:ff:ff:ff:ff:ff
@@ -109,7 +109,7 @@ eno1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group d
 ```
 🌞 **Vérifier que les deux machines se joignent**
 
-```
+```bash
 $ ping 10.10.10.1                                                1 ✘  12s  
 PING 10.10.10.1 (10.10.10.1) 56(84) octets de données.
 64 octets de 10.10.10.1 : icmp_seq=1 ttl=128 temps=1.86 ms
@@ -127,7 +127,7 @@ rtt min/avg/max/mdev = 1.700/1.970/2.734/0.331 ms
 
 🌞 **Déterminer l'adresse MAC de votre correspondant**
 
-```
+```bash
 $ arp
 Address                  HWtype  HWaddress           Flags Mask            Iface
 _gateway                 ether   00:c0:e7:e0:04:4e   C                     wlp4s0
@@ -138,176 +138,113 @@ _gateway                         (incomplete)                              eno1
 
 ## 4. Utilisation d'un des deux comme gateway
 
-Ca, ça peut toujours dépann irl. Comme pour donner internet à une tour sans WiFi quand y'a un PC portable à côté, par exemple.
-
-L'idée est la suivante :
-
-- vos PCs ont deux cartes avec des adresses IP actuellement
-  - la carte WiFi, elle permet notamment d'aller sur internet, grâce au réseau YNOV
-  - la carte Ethernet, qui permet actuellement de joindre votre coéquipier, grâce au réseau que vous avez créé :)
-- si on fait un tit schéma tout moche, ça donne ça :
-
-```schema
-  Internet           Internet
-     |                   |
-    WiFi                WiFi
-     |                   |
-    PC 1 ---Ethernet--- PC 2
-    
-- internet joignable en direct par le PC 1
-- internet joignable en direct par le PC 2
-```
-
-- vous allez désactiver Internet sur une des deux machines, et vous servir de l'autre machine pour accéder à internet.
-
-```schema
-  Internet           Internet
-     X                   |
-     X                  WiFi
-     |                   |
-    PC 1 ---Ethernet--- PC 2
-    
-- internet joignable en direct par le PC 2
-- internet joignable par le PC 1, en passant par le PC 2
-```
-
-- pour ce faiiiiiire :
-  - désactivez l'interface WiFi sur l'un des deux postes
-  - s'assurer de la bonne connectivité entre les deux PCs à travers le câble RJ45
-  - **sur le PC qui n'a plus internet**
-    - sur la carte Ethernet, définir comme passerelle l'adresse IP de l'autre PC
-  - **sur le PC qui a toujours internet**
-    - sur Windows, il y a une option faite exprès (google it. "share internet connection windows 10" par exemple)
-    - sur GNU/Linux, faites le en ligne de commande ou utilisez [Network Manager](https://help.ubuntu.com/community/Internet/ConnectionSharing) (souvent présent sur tous les GNU/Linux communs)
-    - sur MacOS : toute façon vous avez pas de ports RJ, si ? :o (google it sinon)
-
----
 
 🌞**Tester l'accès internet**
-
-- pour tester la connectivité à internet on fait souvent des requêtes simples vers un serveur internet connu
-- essayez de ping l'adresse IP `1.1.1.1`, c'est un serveur connu de CloudFlare (demandez-moi si vous comprenez pas trop la démarche)
+```bash
+$ ping 1.1.1                                                     ✔  3m 8s  
+PING 1.1.1.1 (1.1.1.1) 56(84) octets de données.
+64 octets de 1.1.1.1 : icmp_seq=1 ttl=55 temps=28.2 ms
+64 octets de 1.1.1.1 : icmp_seq=2 ttl=55 temps=50.6 ms
+^C
+--- statistiques ping 1.1.1.1 ---
+2 paquets transmis, 2 reçus, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 28.174/39.398/50.623/11.224 ms
+```
 
 🌞 **Prouver que la connexion Internet passe bien par l'autre PC**
 
-- utiliser la commande `traceroute` ou `tracert` (suivant votre OS) pour bien voir que les requêtes passent par la passerelle choisie (l'autre le PC)
-
-> La commande `traceroute` retourne la liste des machines par lesquelles passent le `ping` avant d'atteindre sa destination.
+Voir TP de Mathieu.Bo
 
 ## 5. Petit chat privé
 
-![Netcat](./pics/netcat.jpg)
-
-On va créer un chat extrêmement simpliste à l'aide de `netcat` (abrégé `nc`). Il est souvent considéré comme un bon couteau-suisse quand il s'agit de faire des choses avec le réseau.
-
-Sous GNU/Linux et MacOS vous l'avez sûrement déjà, sinon débrouillez-vous pour l'installer :). Les Windowsien, ça se passe [ici](https://eternallybored.org/misc/netcat/netcat-win32-1.11.zip) (from https://eternallybored.org/misc/netcat/).  
-
-Une fois en possession de `netcat`, vous allez pouvoir l'utiliser en ligne de commande. Comme beaucoup de commandes sous GNU/Linux, Mac et Windows, on peut utiliser l'option `-h` (`h` pour `help`) pour avoir une aide sur comment utiliser la commande.  
-
-Sur un Windows, ça donne un truc comme ça :
-
-```schema
-C:\Users\It4\Desktop\netcat-win32-1.11>nc.exe -h
-[v1.11 NT www.vulnwatch.org/netcat/]
-connect to somewhere:   nc [-options] hostname port[s] [ports] ...
-listen for inbound:     nc -l -p port [options] [hostname] [port]
-options:
-        -d              detach from console, background mode
-
-        -e prog         inbound program to exec [dangerous!!]
-        -g gateway      source-routing hop point[s], up to 8
-        -G num          source-routing pointer: 4, 8, 12, ...
-        -h              this cruft
-        -i secs         delay interval for lines sent, ports scanned
-        -l              listen mode, for inbound connects
-        -L              listen harder, re-listen on socket close
-        -n              numeric-only IP addresses, no DNS
-        -o file         hex dump of traffic
-        -p port         local port number
-        -r              randomize local and remote ports
-        -s addr         local source address
-        -t              answer TELNET negotiation
-        -u              UDP mode
-        -v              verbose [use twice to be more verbose]
-        -w secs         timeout for connects and final net reads
-        -z              zero-I/O mode [used for scanning]
-port numbers can be individual or ranges: m-n [inclusive]
-```
-
-L'idée ici est la suivante :
-
-- l'un de vous jouera le rôle d'un *serveur*
-- l'autre sera le *client* qui se connecte au *serveur*
-
-Précisément, on va dire à `netcat` d'*écouter sur un port*. Des ports, y'en a un nombre fixe (65536, on verra ça plus tard), et c'est juste le numéro de la porte à laquelle taper si on veut communiquer avec le serveur.
-
-Si le serveur écoute à la porte 20000, alors le client doit demander une connexion en tapant à la porte numéro 20000, simple non ?  
-
-Here we go :
-
 🌞 **sur le PC *serveur*** avec par exemple l'IP 192.168.1.1
-- `nc.exe -l -p 8888`
-  - "`netcat`, écoute sur le port numéro 8888 stp"
-- il se passe rien ? Normal, faut attendre qu'un client se connecte
+``` bash
+$ netcat                                                                                                                                                       127 ✘  47s  
+Cmd line: -l -p 8888
+g
+coucou
+Bonsoir !
+Miaou
+```
 
 🌞 **sur le PC *client*** avec par exemple l'IP 192.168.1.2
 
-- `nc.exe 192.168.1.1 8888`
-  - "`netcat`, connecte toi au port 8888 de la machine 192.168.1.1 stp"
-- une fois fait, vous pouvez taper des messages dans les deux sens
-- appelez-moi quand ça marche ! :)
-- si ça marche pas, essayez d'autres options de `netcat`
-
----
+Voir Mathieu 
 
 🌞 **Visualiser la connexion en cours**
 
-- sur tous les OS, il existe une commande permettant de voir les connexions en cours
-- ouvrez un deuxième terminal pendant une session `netcat`, et utilisez la commande correspondant à votre OS pour repérer la connexion `netcat` :
-
-```bash
-# Windows (dans un Powershell administrateur)
-$ netstat -a -n -b
-
-# Linux
-$ ss -atnp
-
-# MacOS
-$ netstat -a -n # je crois :D
+```bash 
+$ ss -atnp                                                                                                                                                                 ✔ 
+State                Recv-Q           Send-Q                     Local Address:Port                         Peer Address:Port            Process                                               
+LISTEN               0                511                            127.0.0.1:6463                              0.0.0.0:*                users:(("Discord",pid=2021,fd=60))                   
+LISTEN               0                511                            127.0.0.1:35367                             0.0.0.0:*                users:(("github-desktop",pid=13371,fd=81))           
+LISTEN               0                32                            10.10.10.2:53                                0.0.0.0:*                                                                     
+LISTEN               0                128                            127.0.0.1:631                               0.0.0.0:*                                                                     
+ESTAB                0                0                           10.33.16.144:40434                        104.18.8.221:443              users:(("opera",pid=1983,fd=31))                     
+ESTAB                0                0                           10.33.16.144:55686                        104.18.8.221:443              users:(("opera",pid=1983,fd=26))                     
+ESTAB                0                0                           10.33.16.144:42404                     142.250.178.138:443              users:(("insync",pid=1426,fd=84))                    
+ESTAB                0                0                           10.33.16.144:43254                     192.241.190.146:443              users:(("opera",pid=1983,fd=67))                     
+ESTAB                0                0                           10.33.16.144:52760                     151.101.194.217:443              users:(("opera",pid=1983,fd=40))                     
+ESTAB                0                0                           10.33.16.144:59550                     185.199.111.133:443              users:(("opera",pid=1983,fd=30))                     
+ESTAB                0                0                           10.33.16.144:59172                        104.18.8.221:443              users:(("opera",pid=1983,fd=41))                     
+ESTAB                0                0                           10.33.16.144:59930                       140.82.114.26:443              users:(("opera",pid=1983,fd=25))                     
+ESTAB                0                0                           10.33.16.144:40686                     142.250.179.109:443              users:(("insync",pid=1426,fd=86))                    
+ESTAB                0                0                             10.10.10.2:8888                           10.10.10.1:63681            users:(("netcat",pid=31416,fd=4))                    
+CLOSE-WAIT           1                0                           10.33.16.144:55738                      52.219.197.106:443              users:(("opera",pid=1983,fd=44))                     
+FIN-WAIT-1           0                518                         10.33.16.144:57338                       162.125.67.18:443                                                                   
+CLOSE-WAIT           32               0                           10.33.16.144:55742                      52.219.197.106:443              users:(("opera",pid=1983,fd=47))                     
+ESTAB                0                0                           10.33.16.144:60646                        104.18.9.221:443              users:(("opera",pid=1983,fd=49))                     
+ESTAB                0                0                           10.33.16.144:40822                     162.159.133.234:443              users:(("Discord",pid=1874,fd=25))                   
+CLOSE-WAIT           0                0                           10.33.16.144:44360                        140.82.121.6:443              users:(("github-desktop",pid=13363,fd=24))           
+ESTAB                0                0                           10.33.16.144:51922                       140.82.113.25:443              users:(("github-desktop",pid=13363,fd=23))           
+ESTAB                0                0                           10.33.16.144:50104                         13.225.34.3:443              users:(("opera",pid=1983,fd=35))                     
+ESTAB                0                0                           10.33.16.144:50316                     162.159.133.232:443              users:(("Discord",pid=1874,fd=28))                   
+ESTAB                0                0                           10.33.16.144:54200                         75.2.77.152:443              users:(("opera",pid=1983,fd=48))                     
+TIME-WAIT            0                0                           10.33.16.144:52896                       35.186.224.47:443                                                                   
+ESTAB                0                0                           10.33.16.144:43862                     162.159.137.234:443              users:(("Discord",pid=1874,fd=34))                   
+ESTAB                0                0                           10.33.16.144:54066                       35.186.224.25:443              users:(("Discord",pid=1874,fd=32))                   
+LISTEN               0                50                                     *:1716                                    *:*                users:(("kdeconnectd",pid=1034,fd=12))               
+LISTEN               0                128                                [::1]:631                                  [::]:*
 ```
 
 🌞 **Pour aller un peu plus loin**
 
-- si vous faites un `netstat` sur le serveur AVANT que le client `netcat` se connecte, vous devriez observer que votre serveur `netcat` écoute sur toutes vos interfaces
-  - c'est à dire qu'on peut s'y connecter depuis la wifi par exemple :D
-- il est possible d'indiquer à `netcat` une interface précise sur laquelle écouter
-  - par exemple, on écoute sur l'interface Ethernet, mais pas sur la WiFI
-
-```bash
-# Sur Windows/MacOS
-$ nc.exe -l -p PORT_NUMBER -s IP_ADDRESS
-# Par exemple
-$ nc.exe -l -p 9999 -s 192.168.1.37
+```bash 
+sudo ss -atpnl                                                                                                                                                       INT ✘ 
+State             Recv-Q            Send-Q                       Local Address:Port                        Peer Address:Port            Process                                                
+LISTEN            0                 511                              127.0.0.1:6463                             0.0.0.0:*                users:(("Discord",pid=2021,fd=60))                    
+LISTEN            0                 511                              127.0.0.1:35367                            0.0.0.0:*                users:(("github-desktop",pid=13371,fd=81))            
+LISTEN            0                 32                              10.10.10.2:53                               0.0.0.0:*                users:(("dnsmasq",pid=26273,fd=7))                    
+LISTEN            0                 128                              127.0.0.1:631                              0.0.0.0:*                users:(("cupsd",pid=572,fd=8))                        
+LISTEN            0                 4                               10.10.10.2:8888                             0.0.0.0:*                users:(("nc",pid=32060,fd=3))                         
+LISTEN            0                 50                                       *:1716                                   *:*                users:(("kdeconnectd",pid=1034,fd=12))                
+LISTEN            0                 128                                  [::1]:631                                 [::]:*                users:(("cupsd",pid=572,fd=7))
 ```
 
 ## 6. Firewall
 
-Toujours par 2.
-
-Le but est de configurer votre firewall plutôt que de le désactiver
-
 🌞 **Activez et configurez votre firewall**
 
 - autoriser les `ping`
-  - configurer le firewall de votre OS pour accepter le `ping`
-  - aidez vous d'internet
-  - on rentrera dans l'explication dans un prochain cours mais sachez que `ping` envoie un message *ICMP de type 8* (demande d'ECHO) et reçoit un message *ICMP de type 0* (réponse d'écho) en retour
+```bash 
+  sudo iptables -vnL | grep -i icmp                                                                                                                                        ✔ 
+    0     0 REJECT     all  --  *      eno1    0.0.0.0/0            0.0.0.0/0            reject-with icmp-port-unreachable
+    0     0 REJECT     all  --  eno1   *       0.0.0.0/0            0.0.0.0/0            reject-with icmp-port-unreachable
+    0     0 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0            icmptype 3
+    0     0 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0            icmptype 11
+    0     0 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0            icmptype 12
+    0     0 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0            icmptype 8
+    0     0 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0            icmptype 3
+    0     0 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0            icmptype 11
+    0     0 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0            icmptype 12
+    0     0 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0            icmptype 8
+    0     0 REJECT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            reject-with icmp-port-unreachable
+```
 - autoriser le traffic sur le port qu'utilise `nc`
-  - on parle bien d'ouverture de **port** TCP et/ou UDP
-  - on ne parle **PAS** d'autoriser le programme `nc`
-  - choisissez arbitrairement un port entre 1024 et 20000
-  - vous utiliserez ce port pour communiquer avec `netcat` par groupe de 2 toujours
-  - le firewall du *PC serveur* devra avoir un firewall activé et un `netcat` qui fonctionne
+```bash 
+  sudo iptables -vnL | grep -i 8888                                                                                                                                        ✔ 
+    0     0 ACCEPT     tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp dpt:8888
+```
   
 # III. Manipulations d'autres outils/protocoles côté client
 
@@ -324,11 +261,26 @@ Une fois que le serveur DHCP vous a donné une IP, vous enregistrer un fichier a
 
 🌞**Exploration du DHCP, depuis votre PC**
 
-- afficher l'adresse IP du serveur DHCP du réseau WiFi YNOV
-- cette adresse a une durée de vie limitée. C'est le principe du ***bail DHCP*** (ou *DHCP lease*). Trouver la date d'expiration de votre bail DHCP
-- vous pouvez vous renseigner un peu sur le fonctionnement de DHCP dans les grandes lignes. On aura un cours là dessus :)
-
-> Chez vous, c'est votre box qui fait serveur DHCP et qui vous donne une IP quand vous le demandez.
+```bash 
+sudo nmcli con show "WiFi@YNOV" | grep -i dhcp                                                                                                                           ✔ 
+ipv4.dhcp-client-id:                    --
+ipv4.dhcp-iaid:                         --
+ipv4.dhcp-timeout:                      0 (default)
+ipv4.dhcp-send-hostname:                oui
+ipv4.dhcp-hostname:                     --
+ipv4.dhcp-fqdn:                         --
+ipv4.dhcp-hostname-flags:               0x0 (none)
+ipv4.dhcp-vendor-class-identifier:      --
+ipv4.dhcp-reject-servers:               --
+ipv6.dhcp-duid:                         --
+ipv6.dhcp-iaid:                         --
+ipv6.dhcp-timeout:                      0 (default)
+ipv6.dhcp-send-hostname:                oui
+ipv6.dhcp-hostname:                     --
+ipv6.dhcp-hostname-flags:               0x0 (none)
+DHCP4.OPTION[1]:                        dhcp_lease_time = 74727
+DHCP4.OPTION[2]:                        dhcp_server_identifier = 10.33.19.254
+```
 
 ## 2. DNS
 
