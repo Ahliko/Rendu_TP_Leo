@@ -110,7 +110,7 @@ eno1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group d
 🌞 **Vérifier que les deux machines se joignent**
 
 ```
-$ ping 10.10.10.1                                                                  1 ✘  12s  
+$ ping 10.10.10.1                                                1 ✘  12s  
 PING 10.10.10.1 (10.10.10.1) 56(84) octets de données.
 64 octets de 10.10.10.1 : icmp_seq=1 ttl=128 temps=1.86 ms
 64 octets de 10.10.10.1 : icmp_seq=2 ttl=128 temps=2.73 ms
@@ -128,11 +128,12 @@ rtt min/avg/max/mdev = 1.700/1.970/2.734/0.331 ms
 🌞 **Déterminer l'adresse MAC de votre correspondant**
 
 ```
-$ arp                                                                                 ✔  7s  
+$ arp
 Address                  HWtype  HWaddress           Flags Mask            Iface
-_gateway                         (incomplete)                              eno1
-10.10.10.1               ether   a0:8c:fd:30:3e:f4   C                     eno1
 _gateway                 ether   00:c0:e7:e0:04:4e   C                     wlp4s0
+10.10.10.1               ether   88:a4:c2:9c:99:84   C                     eno1
+10.33.16.21              ether   7e:17:d1:8a:53:e6   C                     wlp4s0
+_gateway                         (incomplete)                              eno1
 ```
 
 ## 4. Utilisation d'un des deux comme gateway
