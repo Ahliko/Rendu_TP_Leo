@@ -4,13 +4,10 @@
 
 - [TP4 : TCP, UDP et services réseau](#tp4--tcp-udp-et-services-réseau)
 - [Sommaire](#sommaire)
-- [0. Prérequis](#0-prérequis)
 - [I. First steps](#i-first-steps)
 - [II. Mise en place](#ii-mise-en-place)
     - [1. SSH](#1-ssh)
-    - [2. Routage](#2-routage)
 - [III. DNS](#iii-dns)
-    - [1. Présentation](#1-présentation)
     - [2. Setup](#2-setup)
     - [3. Test](#3-test)
 
