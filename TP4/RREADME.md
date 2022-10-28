@@ -66,94 +66,80 @@ tcp              ESTAB                 0                 0                      
 
 🌞 **Demandez aux OS**
 
-- repérez, avec une commande adaptée (`netstat` ou `ss`), la connexion SSH depuis votre machine
-- ET repérez la connexion SSH depuis votre VM
-
-🦈 **Je veux une capture clean avec le 3-way handshake, un peu de trafic au milieu et une fin de connexion**
-
-## 2. Routage
-
-Ouais, un peu de répétition, ça fait jamais de mal. On va créer une machine qui sera notre routeur, et **permettra à toutes les autres machines du réseau d'avoir Internet.**
-
-🖥️ **Machine `router.tp4.b1`**
-
-- n'oubliez pas de dérouler la checklist (voir [les prérequis du TP](#0-prérequis))
-- donnez lui l'adresse IP `10.4.1.254/24` sur sa carte host-only
-- ajoutez-lui une carte NAT, qui permettra de donner Internet aux autres machines du réseau
-- référez-vous au TP précédent
-
-> Rien à remettre dans le compte-rendu pour cette partie.
+```bash
+ ahliko@ahliko-pc ~ $ ss -tpun
+Netid   State        Recv-Q   Send-Q           Local Address:Port             Peer Address:Port    Process                                   
+udp     ESTAB        0        0          10.33.16.229%wlp4s0:68               10.33.19.254:67                                                
+tcp     ESTAB        0        0                    127.0.0.1:40206               127.0.0.1:63342    users:(("jcef_helper",pid=4985,fd=28))   
+tcp     ESTAB        0        0                 10.33.16.229:38938           136.243.137.2:443                                               
+tcp     CLOSE-WAIT   25       0                 10.33.16.229:48346           82.145.216.20:443      users:(("opera",pid=3614,fd=29))         
+tcp     ESTAB        0        0                 10.33.16.229:60326          74.125.206.188:5228     users:(("opera",pid=3614,fd=25))         
+tcp     ESTAB        0        0                 10.33.16.229:60830         192.241.190.146:443      users:(("opera",pid=3614,fd=55))         
+tcp     ESTAB        0        0                     10.4.1.1:60002               10.4.1.11:22       users:(("ssh",pid=7499,fd=3))            
+tcp     ESTAB        0        0                    127.0.0.1:56418               127.0.0.1:63342    users:(("jcef_helper",pid=4985,fd=25))   
+tcp     ESTAB        0        0                 10.33.16.229:35410           140.82.114.26:443      users:(("opera",pid=3614,fd=83))         
+tcp     ESTAB        0        0           [::ffff:127.0.0.1]:63342      [::ffff:127.0.0.1]:56418    users:(("java",pid=4792,fd=52))          
+tcp     ESTAB        0        0           [::ffff:127.0.0.1]:63342      [::ffff:127.0.0.1]:40206    users:(("java",pid=4792,fd=329)) 
+```
 
 # III. DNS
 
-## 1. Présentation
-
-Un serveur DNS est un serveur qui est capable de répondre à des requêtes DNS.
-
-Une requête DNS est la requête effectuée par une machine lorsqu'elle souhaite connaître l'adresse IP d'une machine, lorsqu'elle connaît son nom.
-
-Par exemple, si vous ouvrez un navigateur web et saisissez `https://www.google.com` alors une requête DNS est automatiquement effectuée par votre PC pour déterminez à quelle adresse IP correspond le nom `www.google.com`.
-
-> La partie `https://` ne fait pas partie du nom de domaine, ça indique simplement au navigateur la méthode de connexion. Ici, c'est HTTPS.
-
-Dans cette partie, on va monter une VM qui porte un serveur DNS. Ce dernier répondra aux autres VMs du LAN quand elles auront besoin de connaître des noms. Ainsi, ce serveur pourra :
-
-- résoudre des noms locaux
-    - vous pourrez `ping node1.tp4.b1` et ça fonctionnera
-    - mais aussi `ping www.google.com` et votre serveur DNS sera capable de le résoudre aussi
-
-*Dans la vraie vie, il n'est pas rare qu'une entreprise gère elle-même ses noms de domaine, voire gère elle-même son serveur DNS. C'est donc du savoir ré-utilisable pour tous qu'on voit ici.*
-
-> En réalité, ce n'est pas votre serveur DNS qui pourra résoudre `www.google.com`, mais il sera capable de *forward* (faire passer) votre requête à un autre serveur DNS qui lui, connaît la réponse.
-
-![Haiku DNS](./pics/haiku_dns.png)
-
 ## 2. Setup
 
-🖥️ **Machine `dns-server.tp4.b1`**
-
-- n'oubliez pas de dérouler la checklist (voir [les prérequis du TP](#0-prérequis))
-- donnez lui l'adresse IP `10.4.1.201/24`
-
-Installation du serveur DNS :
+🌞 **Dans le rendu, je veux**
 
 ```bash
-# assurez-vous que votre machine est à jour
-$ sudo dnf update -y
+[ahliko@dns-server ~]$ sudo cat /etc/named.conf
+//
+// named.conf
+//
+// Provided by Red Hat bind package to configure the ISC BIND named(8) DNS
+// server as a caching only nameserver (as a localhost DNS resolver only).
+//
+// See /usr/share/doc/bind*/sample/ for example named configuration files.
+//
 
-# installation du serveur DNS, son p'tit nom c'est BIND9
-$ sudo dnf install -y bind bind-utils
-```
-
-La configuration du serveur DNS va se faire dans 3 fichiers essentiellement :
-
-- **un fichier de configuration principal**
-    - `/etc/named.conf`
-    - on définit les trucs généraux, comme les adresses IP et le port où on veu écouter
-    - on définit aussi un chemin vers les autres fichiers, les fichiers de zone
-- **un fichier de zone**
-    - `/var/named/tp4.b1.db`
-    - je vous préviens, la syntaxe fait mal
-    - on peut y définir des correspondances `IP ---> nom`
-- **un fichier de zone inverse**
-    - `/var/named/tp4.b1.rev`
-    - on peut y définir des correspondances `nom ---> IP`
-
-➜ **Allooooons-y, fichier de conf principal**
-
-```bash
-# éditez le fichier de config principal pour qu'il ressemble à :
-$ sudo cat /etc/named.conf
 options {
         listen-on port 53 { 127.0.0.1; any; };
         listen-on-v6 port 53 { ::1; };
         directory       "/var/named";
-[...]
+        dump-file       "/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        memstatistics-file "/var/named/data/named_mem_stats.txt";
+        secroots-file   "/var/named/data/named.secroots";
+        recursing-file  "/var/named/data/named.recursing";
         allow-query     { localhost; any; };
         allow-query-cache { localhost; any; };
-
+        /* 
+         - If you are building an AUTHORITATIVE DNS server, do NOT enable recursion.
+         - If you are building a RECURSIVE (caching) DNS server, you need to enable 
+           recursion. 
+         - If your recursive DNS server has a public IP address, you MUST enable access 
+           control to limit queries to your legitimate users. Failing to do so will
+           cause your server to become part of large scale DNS amplification 
+           attacks. Implementing BCP38 within your network would greatly
+           reduce such attack surface 
+        */
         recursion yes;
-[...]
+
+        dnssec-validation yes;
+
+        managed-keys-directory "/var/named/dynamic";
+        geoip-directory "/usr/share/GeoIP";
+
+        pid-file "/run/named/named.pid";
+        session-keyfile "/run/named/session.key";
+
+        /* https://fedoraproject.org/wiki/Changes/CryptoPolicy */
+        include "/etc/crypto-policies/back-ends/bind.config";
+};
+
+logging {
+        channel default_debug {
+                file "data/named.run";
+                severity dynamic;
+        };
+};
 # référence vers notre fichier de zone
 zone "tp4.b1" IN {
      type master;
@@ -168,15 +154,18 @@ zone "1.4.10.in-addr.arpa" IN {
      allow-update { none; };
      allow-query { any; };
 };
+
+zone "." IN {
+        type hint;
+        file "named.ca";
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
 ```
 
-➜ **Et pour les fichiers de zone**
-
 ```bash
-# Fichier de zone pour nom -> IP
-
-$ sudo cat /var/named/tp4.b1.db
-
+[ahliko@dns-server ~]$ sudo cat /var/named/tp4.b1.db
 $TTL 86400
 @ IN SOA dns-server.tp4.b1. admin.tp4.b1. (
     2019061800 ;Serial
@@ -195,10 +184,8 @@ node1      IN A 10.4.1.11
 ```
 
 ```bash
-# Fichier de zone inverse pour IP -> nom
-
-$ sudo cat /var/named/tp4.b1.rev
-
+[ahliko@dns-server ~]$ sudo !!
+sudo cat /var/named/tp4.b1.rev
 $TTL 86400
 @ IN SOA dns-server.tp4.b1. admin.tp4.b1. (
     2019061800 ;Serial
@@ -216,47 +203,147 @@ $TTL 86400
 11 IN PTR node1.tp4.b1.
 ```
 
-➜ **Une fois ces 3 fichiers en place, démarrez le service DNS**
-
 ```bash
-# Démarrez le service tout de suite
-$ sudo systemctl start named
+[ahliko@dns-server ~]$ sudo systemctl status named
+● named.service - Berkeley Internet Name Domain (DNS)
+     Loaded: loaded (/usr/lib/systemd/system/named.service; enabled; vendor preset: disabled)
+     Active: active (running) since Fri 2022-10-28 15:39:11 CEST; 11s ago
+   Main PID: 1464 (named)
+      Tasks: 4 (limit: 5906)
+     Memory: 16.5M
+        CPU: 47ms
+     CGroup: /system.slice/named.service
+             └─1464 /usr/sbin/named -u named -c /etc/named.conf
 
-# Faire en sorte que le service démarre tout seul quand la VM s'allume
-$ sudo systemctl enable named
-
-# Obtenir des infos sur le service
-$ sudo systemctl status named
-
-# Obtenir des logs en cas de probème
-$ sudo journalctl -xe -u named
+Oct 28 15:39:11 dns-server.tp4.b1 named[1464]: network unreachable resolving './NS/IN': 2001:500:9f::42#53
+Oct 28 15:39:11 dns-server.tp4.b1 named[1464]: zone 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa/IN: loaded seri>
+Oct 28 15:39:11 dns-server.tp4.b1 named[1464]: zone localhost.localdomain/IN: loaded serial 0
+Oct 28 15:39:11 dns-server.tp4.b1 named[1464]: all zones loaded
+Oct 28 15:39:11 dns-server.tp4.b1 systemd[1]: Started Berkeley Internet Name Domain (DNS).
+Oct 28 15:39:11 dns-server.tp4.b1 named[1464]: running
 ```
 
-🌞 **Dans le rendu, je veux**
-
-- un `cat` des fichiers de conf
-- un `systemctl status named` qui prouve que le service tourne bien
-- une commande `ss` qui prouve que le service écoute bien sur un port
+```bash
+[ahliko@dns-server ~]$ sudo ss -punl
+State        Recv-Q       Send-Q             Local Address:Port              Peer Address:Port       Process                                 
+UNCONN       0            0                     10.4.1.201:53                     0.0.0.0:*           users:(("named",pid=1464,fd=19))       
+UNCONN       0            0                      127.0.0.1:53                     0.0.0.0:*           users:(("named",pid=1464,fd=16))       
+UNCONN       0            0                      127.0.0.1:323                    0.0.0.0:*           users:(("chronyd",pid=658,fd=5))       
+UNCONN       0            0                          [::1]:53                        [::]:*           users:(("named",pid=1464,fd=22))       
+UNCONN       0            0                          [::1]:323                       [::]:*           users:(("chronyd",pid=658,fd=6))       
+```
 
 🌞 **Ouvrez le bon port dans le firewall**
 
-- grâce à la commande `ss` vous devrez avoir repéré sur quel port tourne le service
-    - vous l'avez écrit dans la conf aussi toute façon :)
-- ouvrez ce port dans le firewall de la machine `dns-server.tp4.b1` (voir le mémo réseau Rocky)
+```bash
+[ahliko@dns-server ~]$ sudo firewall-cmd --add-port=53/udp --permanent
+success
+[ahliko@dns-server ~]$ sudo firewall-cmd --reload
+success
+```
 
 ## 3. Test
 
 🌞 **Sur la machine `node1.tp4.b1`**
 
-- configurez la machine pour qu'elle utilise votre serveur DNS quand elle a besoin de résoudre des noms
-- assurez vous que vous pouvez :
-    - résoudre des noms comme `node1.tp4.b1` et `dns-server.tp4.b1`
-    - mais aussi des noms comme `www.google.com`
+```bash
+[ahliko@node1 ~]$ cat /etc/resolv.conf
+# Generated by NetworkManager
+search tp4.b1
+nameserver 10.4.1.201
+```
+```bash
+[ahliko@node1 ~]$ dig node1.tp4.b1 @10.4.1.201
+
+; <<>> DiG 9.16.23-RH <<>> node1.tp4.b1 @10.4.1.201
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 19844
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 64c28e3499ef750701000000635be3527590d4d6ed115cda (good)
+;; QUESTION SECTION:
+;node1.tp4.b1.                  IN      A
+
+;; ANSWER SECTION:
+node1.tp4.b1.           86400   IN      A       10.4.1.11
+
+;; Query time: 0 msec
+;; SERVER: 10.4.1.201#53(10.4.1.201)
+;; WHEN: Fri Oct 28 16:12:34 CEST 2022
+;; MSG SIZE  rcvd: 85
+```
+```bash
+[ahliko@node1 ~]$ dig dns-server.tp4.b1
+
+; <<>> DiG 9.16.23-RH <<>> dns-server.tp4.b1
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 20188
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: c0f3047bcd9bb62301000000635be3afb307a4bbf759e93a (good)
+;; QUESTION SECTION:
+;dns-server.tp4.b1.             IN      A
+
+;; ANSWER SECTION:
+dns-server.tp4.b1.      86400   IN      A       10.4.1.201
+
+;; Query time: 0 msec
+;; SERVER: 10.4.1.201#53(10.4.1.201)
+;; WHEN: Fri Oct 28 16:14:07 CEST 2022
+;; MSG SIZE  rcvd: 90
+```
+
+```bash
+[ahliko@node1 ~]$ dig www.google.com
+
+; <<>> DiG 9.16.23-RH <<>> www.google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 54727
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 1651afc3a448a17401000000635be3d00b0f0069402afedb (good)
+;; QUESTION SECTION:
+;www.google.com.                        IN      A
+
+;; ANSWER SECTION:
+www.google.com.         300     IN      A       142.250.179.100
+
+;; Query time: 875 msec
+;; SERVER: 10.4.1.201#53(10.4.1.201)
+;; WHEN: Fri Oct 28 16:14:40 CEST 2022
+;; MSG SIZE  rcvd: 87
+```
 
 🌞 **Sur votre PC**
+```bash
+ahliko@ahliko-pc ~/Ynov/Rendu_TP_Leo/TP4 $ dig node1.tp4.b1 @10.4.1.201   
 
-- utilisez une commande pour résoudre le nom `node1.tp4.b1` en utilisant `10.4.1.201` comme serveur DNS
+; <<>> DiG 9.16.33-RH <<>> node1.tp4.b1 @10.4.1.201
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14207
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
 
-> Le fait que votre serveur DNS puisse résoudre un nom comme `www.google.com`, ça s'appelle la récursivité et c'est activé avec la ligne `recursion yes;` dans le fichier de conf.
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 8648586ee37c985301000000635be45cb60e0a82e73e4d2b (good)
+;; QUESTION SECTION:
+;node1.tp4.b1.                  IN      A
 
-🦈 **Capture d'une requête DNS vers le nom `node1.tp4.b1` ainsi que la réponse**
+;; ANSWER SECTION:
+node1.tp4.b1.           86400   IN      A       10.4.1.11
+
+;; Query time: 0 msec
+;; SERVER: 10.4.1.201#53(10.4.1.201)
+;; WHEN: Fri Oct 28 16:17:00 CEST 2022
+;; MSG SIZE  rcvd: 85
+```
