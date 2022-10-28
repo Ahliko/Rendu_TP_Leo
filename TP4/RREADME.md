@@ -60,24 +60,9 @@ tcp              ESTAB                 0                 0                      
 
 ## 1. SSH
 
-🖥️ **Machine `node1.tp4.b1`**
-
-- n'oubliez pas de dérouler la checklist (voir [les prérequis du TP](#0-prérequis))
-- donnez lui l'adresse IP `10.4.1.11/24`
-
-Connectez-vous en SSH à votre VM.
-
 🌞 **Examinez le trafic dans Wireshark**
 
-- **déterminez si SSH utilise TCP ou UDP**
-    - pareil réfléchissez-y deux minutes, logique qu'on utilise pas UDP non ?
-- **repérez le *3-Way Handshake* à l'établissement de la connexion**
-    - c'est le `SYN` `SYNACK` `ACK`
-- **repérez du trafic SSH**
-- **repérez le FIN ACK à la fin d'une connexion**
-- entre le *3-way handshake* et l'échange `FIN`, c'est juste une bouillie de caca chiffré, dans un tunnel TCP
-
-> **SUR WINDOWS, pour cette étape uniquement**, utilisez Git Bash et PAS Powershell. Avec Powershell il sera très difficile d'observer le FIN ACK.
+[Voir fichier Capture_SSH](Capture_SSH.pcapng)
 
 🌞 **Demandez aux OS**
 
