@@ -2,8 +2,7 @@
 ## Somaire
 1. [Prérequis](#prerequis)
 2. [Installation](#installation)
-3. [Configuration](#configuration)
-4. [Utilisation](#utilisation)
+
 
 ## Prérequis <a name="prerequis"></a>
 Un serveur hébergé chez Digital Ocean avec une IP publique.
