@@ -90,7 +90,7 @@ $ sudo dnf install kmod-wireguard wireguard-tools -y
 #### Configuration des clés
 ```bash
 $ wg genkey | sudo tee /etc/wireguard/private.key
-wBvlo+wqDKrNUxSZfAg/U5iX9iWH/CNcAdsH5MnQhFc=
+UDzMl/aCCVuCkHRIzbRuC2WSS9i7tpSx0AhsNH1dlFQ=
 ```
 ```bash
 $ sudo chmod go= /etc/wireguard/private.key
@@ -98,7 +98,7 @@ $ sudo chmod go= /etc/wireguard/private.key
 
 ```bash
 $ sudo cat /etc/wireguard/private.key | wg pubkey | sudo tee /etc/wireguard/public.key
-+oJhxrxSFA+WNOy0NIl8j75/E4GtouFeJjiK5OHJhEY=
+wd3NAVdzFmATpwBLyxR5PtJRaDJ6Ugsr0hLfo0PmNyw=
 ```
 
 #### Choix des IPs
@@ -109,7 +109,7 @@ IPv4 : `10.8.0.0/24`
 ```bash
 $ sudo vim /etc/wireguard/wg0.conf
 [Interface]
-PrivateKey = base64_encoded_private_key_goes_here
+PrivateKey = UDzMl/aCCVuCkHRIzbRuC2WSS9i7tpSx0AhsNH1dlFQ=
 Address = 10.8.0.1/24
 ListenPort = 51820
 SaveConfig = true
