@@ -178,3 +178,25 @@ $ sudo systemctl enable wg-quick@wg0
 ```bash
 $ sudo systemctl start wg-quick@wg0
 ```
+
+```bash
+$ sudo systemctl status wg-quick@wg0.service
+● wg-quick@wg0.service - WireGuard via wg-quick(8) for wg0
+   Loaded: loaded (/usr/lib/systemd/system/wg-quick@.service; enabled; vendor preset: disabled)
+   Active: active (exited) since Tue 2022-11-08 11:32:13 UTC; 44s ago
+     Docs: man:wg-quick(8)
+           man:wg(8)
+           https://www.wireguard.com/
+           https://www.wireguard.com/quickstart/
+           https://git.zx2c4.com/wireguard-tools/about/src/man/wg-quick.8
+           https://git.zx2c4.com/wireguard-tools/about/src/man/wg.8
+  Process: 15829 ExecStart=/usr/bin/wg-quick up wg0 (code=exited, status=0/SUCCESS)
+ Main PID: 15829 (code=exited, status=0/SUCCESS)
+
+Nov 08 11:32:13 rockylinux-s-1vcpu-512mb-10gb-ams3-01 systemd[1]: Starting WireGuard via wg-quick(8) for wg0...
+Nov 08 11:32:13 rockylinux-s-1vcpu-512mb-10gb-ams3-01 wg-quick[15829]: [#] ip link add wg0 type wireguard
+Nov 08 11:32:13 rockylinux-s-1vcpu-512mb-10gb-ams3-01 wg-quick[15829]: [#] wg setconf wg0 /dev/fd/63
+Nov 08 11:32:13 rockylinux-s-1vcpu-512mb-10gb-ams3-01 wg-quick[15829]: [#] ip -4 address add 10.8.0.1/24 dev wg0
+Nov 08 11:32:13 rockylinux-s-1vcpu-512mb-10gb-ams3-01 wg-quick[15829]: [#] ip link set mtu 1420 up dev wg0
+Nov 08 11:32:13 rockylinux-s-1vcpu-512mb-10gb-ams3-01 systemd[1]: Started WireGuard via wg-quick(8) for wg0.
+```
