@@ -398,129 +398,254 @@ ahliko     11063    1040  0 18:06 pts/0    00:00:00 grep --color=auto nginx
 
 🌞 **Déterminer le path du fichier de configuration de NGINX**
 
-- faites un `ls -al <PATH_VERS_LE_FICHIER>` pour le compte-rendu
+```zsh
+[ahliko@TP2-linux nginx]$ ls -al /etc/nginx
+total 84
+drwxr-xr-x.  4 root root 4096 Dec  9 17:26 .
+drwxr-xr-x. 78 root root 8192 Dec 10 10:22 ..
+drwxr-xr-x.  2 root root    6 Oct 31 16:37 conf.d
+drwxr-xr-x.  2 root root    6 Oct 31 16:37 default.d
+-rw-r--r--.  1 root root 1077 Oct 31 16:37 fastcgi.conf
+-rw-r--r--.  1 root root 1077 Oct 31 16:37 fastcgi.conf.default
+-rw-r--r--.  1 root root 1007 Oct 31 16:37 fastcgi_params
+-rw-r--r--.  1 root root 1007 Oct 31 16:37 fastcgi_params.default
+-rw-r--r--.  1 root root 2837 Oct 31 16:37 koi-utf
+-rw-r--r--.  1 root root 2223 Oct 31 16:37 koi-win
+-rw-r--r--.  1 root root 5231 Oct 31 16:37 mime.types
+-rw-r--r--.  1 root root 5231 Oct 31 16:37 mime.types.default
+-rw-r--r--.  1 root root 2334 Oct 31 16:37 nginx.conf
+-rw-r--r--.  1 root root 2656 Oct 31 16:37 nginx.conf.default
+-rw-r--r--.  1 root root  636 Oct 31 16:37 scgi_params
+-rw-r--r--.  1 root root  636 Oct 31 16:37 scgi_params.default
+-rw-r--r--.  1 root root  664 Oct 31 16:37 uwsgi_params
+-rw-r--r--.  1 root root  664 Oct 31 16:37 uwsgi_params.default
+-rw-r--r--.  1 root root 3610 Oct 31 16:37 win-utf
+```
 
 🌞 **Trouver dans le fichier de conf**
 
-- les lignes qui permettent de faire tourner un site web d'accueil (la page moche que vous avez vu avec votre navigateur)
-    - ce que vous cherchez, c'est un bloc `server { }` dans le fichier de conf
-    - vous ferez un `cat <FICHIER> | grep <TEXTE> -A X` pour me montrer les lignes concernées dans le compte-rendu
-        - l'option `-A X` permet d'afficher aussi les `X` lignes après chaque ligne trouvée par `grep`
-- une ligne qui parle d'inclure d'autres fichiers de conf
-    - encore un `cat <FICHIER> | grep <TEXTE>`
-    - bah ouais, on stocke pas toute la conf dans un seul fichier, sinon ça serait le bordel
+```zsh
+[ahliko@TP2-linux nginx]$ cat nginx.conf | grep "server {" -A 23
+    server {
+        listen       80;
+        listen       [::]:80;
+        server_name  _;
+        root         /usr/share/nginx/html;
+
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+```
+
+```zsh
+[ahliko@TP2-linux nginx]$ cat nginx.conf | grep include | grep .conf
+include /usr/share/nginx/modules/*.conf;
+    include /etc/nginx/conf.d/*.conf;
+        include /etc/nginx/default.d/*.conf;
+#        include /etc/nginx/default.d/*.conf;
+```
 
 ## 3. Déployer un nouveau site web
 
 🌞 **Créer un site web**
 
-- bon on est pas en cours de design ici, alors on va faire simplissime
-- créer un sous-dossier dans `/var/www/`
-    - par convention, on stocke les sites web dans `/var/www/`
-    - votre dossier doit porter le nom `tp2_linux`
-- dans ce dossier `/var/www/tp2_linux`, créez un fichier `index.html`
-    - il doit contenir `<h1>MEOW mon premier serveur web</h1>`
+```zsh
+[ahliko@TP2-linux var]$ sudo mkdir www
+[ahliko@TP2-linux www]$ sudo mkdir tp2_linux
+[ahliko@TP2-linux tp2_linux]$ sudo cat index.html
+<h1>MEOW mon premier serveur web</h1>
+```
 
 🌞 **Adapter la conf NGINX**
 
-- dans le fichier de conf principal
-    - vous supprimerez le bloc `server {}` repéré plus tôt pour que NGINX ne serve plus le site par défaut
-    - redémarrez NGINX pour que les changements prennent effet
-- créez un nouveau fichier de conf
-    - il doit être nommé correctement
-    - il doit être placé dans le bon dossier
-    - c'est quoi un "nom correct" et "le bon dossier" ?
-        - bah vous avez repéré dans la partie d'avant les fichiers qui sont inclus par le fichier de conf principal non ?
-        - créez votre fichier en conséquence
-    - redémarrez NGINX pour que les changements prennent effet
-    - le contenu doit être le suivant :
+```zsh
+[ahliko@TP2-linux ~]$ cat /etc/nginx/nginx.conf
+# For more information on configuration, see:
+#   * Official English Documentation: http://nginx.org/en/docs/
+#   * Official Russian Documentation: http://nginx.org/ru/docs/
 
-```nginx
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+# Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 4096;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    include /etc/nginx/conf.d/*.conf;
+
+
+# Settings for a TLS enabled server.
+#
+#    server {
+#        listen       443 ssl http2;
+#        listen       [::]:443 ssl http2;
+#        server_name  _;
+#        root         /usr/share/nginx/html;
+#
+#        ssl_certificate "/etc/pki/nginx/server.crt";
+#        ssl_certificate_key "/etc/pki/nginx/private/server.key";
+#        ssl_session_cache shared:SSL:1m;
+#        ssl_session_timeout  10m;
+#        ssl_ciphers PROFILE=SYSTEM;
+#        ssl_prefer_server_ciphers on;
+#
+#        # Load configuration files for the default server block.
+#        include /etc/nginx/default.d/*.conf;
+#
+#        error_page 404 /404.html;
+#            location = /40x.html {
+#        }
+#
+#        error_page 500 502 503 504 /50x.html;
+#            location = /50x.html {
+#        }
+#    }
+
+}
+```
+
+```zsh
+sudo systemctl restart nginx
+```
+
+
+```zsh
+[ahliko@TP2-linux ~]$ echo $RANDOM
+27834
+```
+
+```zsh
+[ahliko@TP2-linux ~]$ sudo cat /etc/nginx/conf.d/server.conf
 server {
   # le port choisi devra être obtenu avec un 'echo $RANDOM' là encore
-  listen <PORT>;
+  listen 27834;
 
   root /var/www/tp2_linux;
 }
 ```
 
+```zsh
+[ahliko@TP2-linux ~]$ sudo sudo firewall-cmd --remove-port=80/tcp --permanent
+success
+[ahliko@TP2-linux ~]$ sudo sudo firewall-cmd --add-port=27834/tcp --permanent
+success
+[ahliko@TP2-linux ~]$ sudo firewall-cmd --reload
+success
+[ahliko@TP2-linux ~]$ sudo firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: enp0s3 enp0s8
+  sources: 
+  services: cockpit dhcpv6-client
+  ports: 6551/tcp 27834/tcp
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+```
+
 🌞 **Visitez votre super site web**
 
-- toujours avec une commande `curl` depuis votre PC (ou un navigateur)
+```zsh
+[ahliko@ahliko-pc ~]$ curl 10.4.1.11:27834
+<h1>MEOW mon premier serveur web</h1>
+```
 
 # III. Your own services
 
-Dans cette partie, on va créer notre propre service :)
-
-HE ! Vous vous souvenez de `netcat` ou `nc` ? Le ptit machin de notre premier cours de réseau ? C'EST L'HEURE DE LE RESORTIR DES PLACARDS.
-
 ## 1. Au cas où vous auriez oublié
-
-Au cas où vous auriez oublié, une petite partie qui ne doit pas figurer dans le compte-rendu, pour vous remettre `nc` en main.
-
-➜ Dans la VM
-
-- `nc -l 8888`
-    - lance netcat en mode listen
-    - il écoute sur le port 8888
-    - sans rien préciser de plus, c'est le port 8888 TCP qui est utilisé
-
-➜ Allumez une autre VM vite fait
-
-- `nc <IP_PREMIERE_VM> 8888`
-- vérifiez que vous pouvez envoyer des messages dans les deux sens
-
-> Oubliez pas d'ouvrir le port 8888/tcp de la première VM bien sûr :)
 
 ## 2. Analyse des services existants
 
-Un service c'est quoi concrètement ? C'est juste un processus, que le système lance, et dont il s'occupe après.
-
-Il est défini dans un simple fichier texte, qui contient une info primordiale : la commande exécutée quand on "start" le service.
-
-Il est possible de définir beaucoup d'autres paramètres optionnels afin que notre service s'exécute dans de bonnes conditions.
-
 🌞 **Afficher le fichier de service SSH**
 
-- vous pouvez obtenir son chemin avec un `systemctl status <SERVICE>`
-- mettez en évidence la ligne qui commence par `ExecStart=`
-    - encore un `cat <FICHIER> | grep <TEXTE>`
-    - c'est la ligne qui définit la commande lancée lorsqu'on "start" le service
-        - taper `systemctl start <SERVICE>` ou exécuter cette commande à la main, c'est (presque) pareil
-
+```zsh
+[ahliko@TP2-linux ~]$ cat /usr/lib/systemd/system/sshd.service | grep ExecStart
+ExecStart=/usr/sbin/sshd -D $OPTIONS
+```
 🌞 **Afficher le fichier de service NGINX**
 
-- mettez en évidence la ligne qui commence par `ExecStart=`
+```zsh
+[ahliko@TP2-linux ~]$ cat /usr/lib/systemd/system/nginx.service | grep ExecStart=
+ExecStart=/usr/sbin/nginx
+```
 
 ## 3. Création de service
 
 ![Create service](./pics/create_service.png)
 
-Bon ! On va créer un petit service qui lance un `nc`. Et vous allez tout de suite voir pourquoi c'est pratique d'en faire un service et pas juste le lancer à la min.
-
-Ca reste un truc pour s'exercer, c'pas non plus le truc le plus utile de l'année que de mettre un `nc` dans un service n_n
-
 🌞 **Créez le fichier `/etc/systemd/system/tp2_nc.service`**
 
-- son contenu doit être le suivant (nice & easy)
-
-```service
+```zsh
+[ahliko@TP2-linux ~]$ echo $RANDOM
+139
+[ahliko@TP2-linux ~]$ cat /etc/systemd/system/tp2_nc.service
 [Unit]
 Description=Super netcat tout fou
 
 [Service]
-ExecStart=/usr/bin/nc -l <PORT>
+ExecStart=/usr/bin/nc -l 139
 ```
-
-> Vous remplacerez `<PORT>` par un numéro de port random obtenu avec la même méthode que précédemment.
 
 🌞 **Indiquer au système qu'on a modifié les fichiers de service**
 
-- la commande c'est `sudo systemctl daemon-reload`
+```zsh
+[ahliko@TP2-linux ~]$ sudo systemctl daemon-reload
+```
 
 🌞 **Démarrer notre service de ouf**
 
-- avec une commande `systemctl start`
+```zsh
+[ahliko@TP2-linux ~]$ sudo systemctl start tp2_nc
+[ahliko@TP2-linux ~]$ sudo systemctl status tp2_nc
+● tp2_nc.service - Super netcat tout fou
+     Loaded: loaded (/etc/systemd/system/tp2_nc.service; static)
+     Active: active (running) since Sat 2022-12-10 12:16:20 CET; 38s ago
+   Main PID: 1942 (nc)
+      Tasks: 1 (limit: 5906)
+     Memory: 788.0K
+        CPU: 3ms
+     CGroup: /system.slice/tp2_nc.service
+             └─1942 /usr/bin/nc -l 139
+
+Dec 10 12:16:20 TP2-linux systemd[1]: Started Super netcat tout fou.
+```
 
 🌞 **Vérifier que ça fonctionne**
 
