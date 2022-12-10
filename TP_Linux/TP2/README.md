@@ -330,7 +330,19 @@ ChallengeResponseAuthentication no
 🌞 **Installer le serveur NGINX**
 
 ```zsh
-sudo dnf install nginx -y
+sudo dnf install ng[ahliko@TP2-linux ~]$ sudo systemctl status tp2_nc
+● tp2_nc.service - Super netcat tout fou
+     Loaded: loaded (/etc/systemd/system/tp2_nc.service; static)
+     Active: active (running) since Sat 2022-12-10 12:16:20 CET; 38s ago
+   Main PID: 1942 (nc)
+      Tasks: 1 (limit: 5906)
+     Memory: 788.0K
+        CPU: 3ms
+     CGroup: /system.slice/tp2_nc.service
+             └─1942 /usr/bin/nc -l 139
+
+Dec 10 12:16:20 TP2-linux systemd[1]: Started Super netcat tout fou.
+inx -y
 ```
 
 🌞 **Démarrer le service NGINX**
@@ -633,6 +645,15 @@ ExecStart=/usr/bin/nc -l 139
 
 ```zsh
 [ahliko@TP2-linux ~]$ sudo systemctl start tp2_nc
+[ahliko@TP2-linux ~]$ sudo firewall-cmd --add-port=139/tcp --permanent
+success
+[ahliko@TP2-linux ~]$ sudo firewall-cmd --reload
+success
+```
+
+🌞 **Vérifier que ça fonctionne**
+
+```zsh
 [ahliko@TP2-linux ~]$ sudo systemctl status tp2_nc
 ● tp2_nc.service - Super netcat tout fou
      Loaded: loaded (/etc/systemd/system/tp2_nc.service; static)
@@ -647,36 +668,58 @@ ExecStart=/usr/bin/nc -l 139
 Dec 10 12:16:20 TP2-linux systemd[1]: Started Super netcat tout fou.
 ```
 
-🌞 **Vérifier que ça fonctionne**
+```zsh
+[ahliko@TP2-linux ~]$ ss -alnpt | grep 139
+LISTEN 0      10           0.0.0.0:139        0.0.0.0:*          
+LISTEN 0      10              [::]:139           [::]:*
+```
 
-- vérifier que le service tourne avec un `systemctl status <SERVICE>`
-- vérifier que `nc` écoute bien derrière un port avec un `ss`
-    - vous filtrerez avec un `| grep` la sortie de la commande pour n'afficher que les lignes intéressantes
-- vérifer que juste ça marche en vous connectant au service depuis une autre VM
-    - allumez une autre VM vite fait et vous tapez une commande `nc` pour vous connecter à la première
-
-> **Normalement**, dans ce TP, vous vous connectez depuis votre PC avec un `nc` vers la VM, mais bon. Vos supers OS Windows/MacOS chient un peu sur les conventions de réseau, et ça marche pas super super en utilisant un `nc` directement sur votre machine. Donc voilà, allons au plus simple : allumez vite fait une deuxième qui servira de client pour tester la connexion à votre service `tp2_nc`.
-
-➜ Si vous vous connectez avec le client, que vous envoyez éventuellement des messages, et que vous quittez `nc` avec un CTRL+C, alors vous pourrez constater que le service s'est stoppé
-
-- bah oui, c'est le comportement de `nc` ça !
-- le client se connecte, et quand il se tire, ça ferme `nc` côté serveur aussi
-- faut le relancer si vous voulez retester !
+```zsh
+[ahliko@TP2-Linuxclient ~]$ nc 10.4.1.11 139
+hey
+```
 
 🌞 **Les logs de votre service**
 
-- mais euh, ça s'affiche où les messages envoyés par le client ? Dans les logs !
-- `sudo journalctl -xe -u tp2_nc` pour visualiser les logs de votre service
-- `sudo journalctl -xe -u tp2_nc -f ` pour visualiser **en temps réel** les logs de votre service
-    - `-f` comme follow (on "suit" l'arrivée des logs en temps réel)
-- dans le compte-rendu je veux
-    - une commande `journalctl` filtrée avec `grep` qui affiche la ligne qui indique le démarrage du service
-    - une commande `journalctl` filtrée avec `grep` qui affiche un message reçu qui a été envoyé par le client
-    - une commande `journalctl` filtrée avec `grep` qui affiche la ligne qui indique l'arrêt du service
+
+
+```zsh
+[ahliko@TP2-linux ~]$ sudo journalctl -xe -u tp2_nc | grep Started
+Dec 10 12:16:20 TP2-linux systemd[1]: Started Super netcat tout fou.
+[ahliko@TP2-linux ~]$ sudo journalctl -xe -u tp2_nc | grep hey
+Dec 10 13:09:07 TP2-linux nc[1942]: hey
+[ahliko@TP2-linux ~]$ sudo journalctl -xe -u tp2_nc | grep Deactivated
+Dec 10 13:09:13 TP2-linux systemd[1]: tp2_nc.service: Deactivated successfully.
+```
 
 🌞 **Affiner la définition du service**
 
-- faire en sorte que le service redémarre automatiquement s'il se termine
-    - comme ça, quand un client se co, puis se tire, le service se relancera tout seul
-    - ajoutez `Restart=always` dans la section `[Service]` de votre service
-    - n'oubliez pas d'indiquer au système que vous avez modifié les fichiers de service :)
+```zsh
+[ahliko@TP2-linux ~]$ cat /etc/systemd/system/tp2_nc.service
+[Unit]
+Description=Super netcat tout fou
+
+[Service]
+ExecStart=/usr/bin/nc -l 139
+Restart=always
+```
+
+```zsh
+[ahliko@TP2-Linuxclient ~]$ nc 10.4.1.11 139
+he
+```
+
+```zsh
+[ahliko@TP2-linux ~]$ sudo systemctl status tp2_nc
+● tp2_nc.service - Super netcat tout fou
+     Loaded: loaded (/etc/systemd/system/tp2_nc.service; static)
+     Active: active (running) since Sat 2022-12-10 13:14:42 CET; 1min 56s ago
+   Main PID: 2534 (nc)
+      Tasks: 1 (limit: 5906)
+     Memory: 780.0K
+        CPU: 2ms
+     CGroup: /system.slice/tp2_nc.service
+             └─2534 /usr/bin/nc -l 139
+
+Dec 10 13:14:42 TP2-linux systemd[1]: Started Super netcat tout fou.
+```
