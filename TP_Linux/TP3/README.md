@@ -1,5 +1,7 @@
 # TP 3 : We do a little scripting
 
+![https://asciinema.org/a/gvsXzq91E9X5K8ipP8C5cVimg](https://asciinema.org/a/gvsXzq91E9X5K8ipP8C5cVimg.png)
+
 ## Sommaire
 
 - [TP 3 : We do a little scripting](#tp-3--we-do-a-little-scripting)
@@ -15,179 +17,58 @@
 
 # 0. Un premier script
 
-➜ **Créer un fichier `test.sh` dans le dossier `/srv/` avec le contenu suivant** :
-
-```bash
-#!/bin/bash
-# Simple test script
-
-echo "Connecté actuellement avec l'utilisateur $(whoami)."
-```
-
-> La première ligne est appelée le *shebang*. Cela indique le chemin du programme qui sera utilisé par le script. Ici on inscrit donc, pour un script `bash`, le chemin vers le programme `bash` mais c'est la même chose pour des scripts en Python, PHP, etc.
-
-➜ **Modifier les permissions du script `test.sh`**
-
-- si c'est pas déjà le cas, faites en sorte qu'il appartienne à votre utilisateur
-    - 🐚 `chown`
-- ajoutez la permission `x` pour votre utilisateur afin que vous puissiez exécuter le script
-    - 🐚 `chmod`
-
-➜ **Exécuter le script** :
-
-```bash
-# Exécuter le script, peu importe le dossier où vous vous trouvez
-$ /srv/test.sh
-
-# Exécuter le script, depuis le dossier où il est stocké
-$ cd /srv
-$ ./test.sh
-```
-
-> **Vos scripts devront toujours se présenter comme ça** : muni d'un *shebang* à la ligne 1 du script, appartenir à un utilisateur spécifique qui possède le droit d'exécution sur le fichier.
-
-# I. Script carte d'identité
-
-Vous allez écrire **un script qui récolte des informations sur le système et les affiche à l'utilisateur.** Il s'appellera `idcard.sh` et sera stocké dans `/srv/idcard/idcard.sh`.
-
-> `.sh` est l'extension qu'on donne par convention aux scripts réalisés pour être exécutés avec `sh` ou `bash`.
-
-➜ **Testez les commandes à la main avant de les incorporer au script.**
-
-➜ Ce que doit faire le script. Il doit afficher :
-
-- le **nom de la machine**
-    - 🐚 `hostnamectl`
-- le **nom de l'OS** de la machine
-    - regardez le fichier `/etc/redhat-release` ou `/etc/os-release`
-    - 🐚 `source`
-- la **version du noyau** Linux utilisé par la machine
-    - 🐚 `uname`
-- l'**adresse IP** de la machine
-    - 🐚 `ip`
-- l'**état de la RAM**
-    - 🐚 `free`
-    - espace dispo en RAM (en Go, Mo, ou Ko)
-    - taille totale de la RAM (en Go, Mo, ou ko)
-- l'**espace restant sur le disque dur**, en Go (ou Mo, ou ko)
-    - 🐚 `df`
-- le **top 5 des processus** qui pompent le plus de RAM sur la machine actuellement. Procédez par étape :
-    - 🐚 `ps`
-    - listez les process
-    - affichez la RAM utilisée par chaque process
-    - triez par RAM utilisée
-    - isolez les 5 premiers
-- la **liste des ports en écoute** sur la machine, avec le programme qui est derrière
-    - préciser, en plus du numéro, s'il s'agit d'un port TCP ou UDP
-    - 🐚 `ss`
-- un **lien vers une image/gif** random de chat
-    - 🐚 `curl`
-    - il y a de très bons sites pour ça hihi
-    - avec [celui-ci](https://cataas.com/), une simple requête HTTP vers `https://cataas.com/cat` vous retourne l'URL d'une random image de chat
-        - une requête sur cette adresse retourne directement l'image, il faut l'enregistret dans un fichier
-        - parfois le fichier est un JPG, parfois un PNG, parfois même un GIF
-        - 🐚 `file` peut vous aider à déterminer le type de fichier
-
-Pour vous faire manipuler les sorties/entrées de commandes, votre script devra sortir **EXACTEMENT** :
-
-```
-$ /srv/idcard/idcard.sh
-Machine name : ...
-OS ... and kernel version is ...
-IP : ...
-RAM : ... memory available on ... total memory
-Disk : ... space left
-Top 5 processes by RAM usage :
-  - ...
-  - ...
-  - ...
-  - ...
-  - ...
-Listening ports :
-  - 22 tcp : sshd
-  - ...
-  - ...
-
-Here is your random cat : ./cat.jpg
-```
-
-## Rendu
-
-📁 **Fichier `/srv/idcard/idcard.sh`**
-
 🌞 **Vous fournirez dans le compte-rendu**, en plus du fichier, **un exemple d'exécution avec une sortie**, dans des balises de code.
+
+[idcard.sh Ici :)](/srv/idcard/idcard.sh)
+
+```bash
+[ ahliko@fedora  ~ ] $ bash /srv/idcard/idcard.sh
+Machine Name : fedora
+OS Fedora release 37 (Thirty Seven) and kernel version is Linux fedora 6.0.17-300.fc37.x86_64
+IP : 10.33.18.194/22
+RAM : 15Gi memory available on 27Gi total memory
+Disk : 147G space left
+Top 5 processes by RAM usage :
+  - /home/ahliko/.local/share/JetBrains/Toolbox/apps/IDEA-U/ch-0/223.8214.52/jbr/bin/java
+  - /home/ahliko/.local/share/JetBrains/Toolbox/apps/Fleet/ch-0/1.13.92/bin/Fleet
+  - /usr/lib64/opera/opera
+  - /usr/lib64/discord/Discord
+  - /usr/libexec/packagekitd
+Listening ports :
+  - 48425 udp : avahi-daemon
+  - 53 udp : systemd-resolve
+  - 53 udp : systemd-resolve
+  - 323 udp : chronyd
+  - 5353 udp : opera
+  - 5353 udp : avahi-daemon
+  - 5355 udp : systemd-resolve
+  - 53 tcp : systemd-resolve
+  - 6463 tcp : Discord
+  - 5355 tcp : systemd-resolve
+  - 631 tcp : cupsd
+  - 53 tcp : systemd-resolve
+
+Here is your random cat : ./cat.jpeg
+```
 
 # II. Script youtube-dl
 
-**Un petit script qui télécharge des vidéos Youtube.** Vous l'appellerez `yt.sh`. Il sera stocké dans `/srv/yt/yt.sh`.
-
-**Pour ça on va avoir besoin d'une commande : `youtube-dl`.** Je vous laisse vous référer [à la doc officielle](https://github.com/ytdl-org/youtube-dl/blob/master/README.md#readme) pour voir comment récupérer cette commande sur votre machine.
-
-Comme toujours, **PRENEZ LE TEMPS** de manipuler la commande et d'explorer un peu le `youtube-dl --help`.
-
-Le contenu de votre script :
-
-➜ **1. Permettre le téléchargement d'une vidéo youtube dont l'URL est passée au script**
-
-- la vidéo devra être téléchargée dans le dossier `/srv/yt/downloads/`
-    - le script doit s'assurer que ce dossier existe sinon il quitte
-    - vous pouvez utiliser la commande `exit` pour que le script s'arrête
-- plus précisément, chaque téléchargement de vidéo créera un dossier
-    - `/srv/yt/downloads/<NOM_VIDEO>`
-    - il vous faudra donc, avant de télécharger la vidéo, exécuter une commande pour récupérer son nom afin de créer le dossier en fonction
-- la vidéo sera téléchargée dans
-    - `/srv/yt/downloads/<NOM_VIDEO>/<NOM_VIDEO>.mp4`
-- la description de la vidéo sera aussi téléchargée
-    - dans `/srv/yt/downloads/<NOM_VIDEO>/description`
-    - on peut récup la description avec une commande `youtube-dl`
-- la commande `youtube-dl` génère du texte dans le terminal, ce texte devra être masqué
-    - vous pouvez utiliser une redirection de flux vers `/dev/null`, c'est ce que l'on fait généralement pour se débarasser d'une sortie non-désirée
-
-Il est possible de récupérer les arguments passés au script dans les variables `$1`, `$2`, etc.
-
-```bash
-$ cat script.sh
-echo $1
-
-$ ./script.sh toto
-toto
-```
-
-➜ **2. Le script produira une sortie personnalisée**
-
-- utilisez la commande `echo` pour écrire dans le terminal
-- la sortie **DEVRA** être comme suit :
-
-```bash
-$ /srv/yt/yt.sh https://www.youtube.com/watch?v=sNx57atloH8
-Video https://www.youtube.com/watch?v=sNx57atloH8 was downloaded. 
-File path : /srv/yt/downloads/tomato anxiety/tomato anxiety.mp4`
-```
-
-➜ **3. A chaque vidéo téléchargée, votre script produira une ligne de log dans le fichier `/var/log/yt/download.log`**
-
-- votre script doit s'assurer que le dossier `/var/log/yt/` existe, sinon il refuse de s'exécuter
-- la ligne doit être comme suit :
-
-```
-[yy/mm/dd hh:mm:ss] Video <URL> was downloaded. File path : <PATH>`
-```
-
-Par exemple :
-
-```
-[21/11/12 13:22:47] Video https://www.youtube.com/watch?v=sNx57atloH8 was downloaded. File path : /srv/yt/downloads/tomato anxiety/tomato anxiety.mp4`
-```
-
-> Hint : La commande `date` permet d'afficher la date et de choisir à quel format elle sera affichée. Idéal pour générer des logs. [J'ai trouvé ce lien](https://www.geeksforgeeks.org/date-command-linux-examples/), premier résultat google pour moi, y'a de bons exemples (en bas de page surtout pour le formatage de la date en sortie).
-
-## Rendu
-
-📁 **Le script `/srv/yt/yt.sh`**
-
-📁 **Le fichier de log `/var/log/yt/download.log`**, avec au moins quelques lignes
-
 🌞 Vous fournirez dans le compte-rendu, en plus du fichier, **un exemple d'exécution avec une sortie**, dans des balises de code.
+
+[yt.sh Ici :)](/srv/yt/yt.sh)
+
+[download.log Ici :)](/var/log/download.log)
+
+```bash
+[ ahliko@fedora /srv/yt ] $ ./yt.sh https://www.youtube.com/watch\?v\=EGohSsaCJOU
+Video https://www.youtube.com/watch?v=EGohSsaCJOU was downloaded.
+File path : /srv/yt/downloads/The first ten seconds of never gonna give you up/The first ten seconds of never gonna give you up.mp4
+```
+
+```bash
+[ ahliko@fedora ~ ] $ cat /var/log/yt/download.log 
+[2023/01/09 18:05:43] Video https://www.youtube.com/watch?v=EGohSsaCJOU was downloaded. File path : /srv/yt/downloads/The first ten seconds of never gonna give you up/The first ten seconds of never gonna give you up.mp4
+```
 
 # III. MAKE IT A SERVICE
 
