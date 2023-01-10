@@ -169,6 +169,13 @@ success
 [ahliko@storage ~]$ cat /etc/exports
 /storage/site_web_1 10.4.0.3(rw,sync,no_subtree_check)
 /storage/site_web_2 10.4.0.3(rw,sync,no_subtree_check)
+
+
+[ahliko@storage ~]$ sudo systemctl enable nfs-server
+[sudo] password for ahliko: 
+Created symlink /etc/systemd/system/multi-user.target.wants/nfs-server.service → /usr/lib/systemd/system/nfs-server.service.
+
+
 ```
 
 🌞 **Donnez les commandes réalisées sur le client NFS `web.tp4.linux`**
