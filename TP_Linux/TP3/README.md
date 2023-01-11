@@ -1,7 +1,5 @@
 # TP 3 : We do a little scripting
 
-![https://asciinema.org/a/gvsXzq91E9X5K8ipP8C5cVimg](https://asciinema.org/a/gvsXzq91E9X5K8ipP8C5cVimg.png)
-
 ## Sommaire
 
 - [TP 3 : We do a little scripting](#tp-3--we-do-a-little-scripting)
@@ -72,85 +70,85 @@ File path : /srv/yt/downloads/The first ten seconds of never gonna give you up/T
 
 # III. MAKE IT A SERVICE
 
-YES. Yet again. **On va en faire un [service](../../cours/notions/serveur/README.md#ii-service).**
+## Rendu
 
-L'idée :
-
-➜ plutôt que d'appeler la commande à la main quand on veut télécharger une vidéo, **on va créer un service qui les téléchargera pour nous**
-
-➜ le service devra **lire en permanence dans un fichier**
-
-- s'il trouve une nouvelle ligne dans le fichier, il vérifie que c'est bien une URL de vidéo youtube
-    - si oui, il la télécharge, puis enlève la ligne
-    - sinon, il enlève juste la ligne
-
-➜ **qui écrit dans le fichier pour ajouter des URLs ? Bah vous !**
-
-- vous pouvez écrire une liste d'URL, une par ligne, et le service devra les télécharger une par une
-
----
-
-Pour ça, procédez par étape :
-
-- **partez de votre script précédent** (gardez une copie propre du premier script, qui doit être livré dans le dépôt git)
-    - le nouveau script s'appellera `yt-v2.sh`
-- **adaptez-le pour qu'il lise les URL dans un fichier** plutôt qu'en argument sur la ligne de commande
-- **faites en sorte qu'il tourne en permanence**, et vérifie le contenu du fichier toutes les X secondes
-    - boucle infinie qui :
-        - lit un fichier
-        - effectue des actions si le fichier n'est pas vide
-        - sleep pendant une durée déterminée
-- **il doit marcher si on précise une vidéo par ligne**
-    - il les télécharge une par une
-    - et supprime les lignes une par une
-
-➜ **une fois que tout ça fonctionne, enfin, créez un service** qui lance votre script :
-
-- créez un fichier `/etc/systemd/system/yt.service`. Il comporte :
-    - une brève description
-    - un `ExecStart` pour indiquer que ce service sert à lancer votre script
-    - une clause `User=` pour indiquer que c'est l'utilisateur `yt` qui lance le script
-        - créez l'utilisateur s'il n'existe pas
-        - faites en sorte que le dossier `/srv/yt` et tout son contenu lui appartienne
-        - le dossier de log doit lui appartenir aussi
-        - l'utilisateur `yt` ne doit pas pouvoir se connecter sur la machine
+[yt-v2.sh Ici :)](/srv/yt/yt-v2.sh)
 
 ```bash
+[ ahliko@fedora ~ ] $cat /etc/systemd/system/yt.service
 [Unit]
-Description=<Votre description>
+Description=A youtube downloader :)
 
 [Service]
-ExecStart=<Votre script>
+ExecStart=/srv/yt/yt-v2.sh
 User=yt
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-> Pour rappel, après la moindre modification dans le dossier `/etc/systemd/system/`, vous devez exécuter la commande `sudo systemctl daemon-reload` pour dire au système de lire les changements qu'on a effectué.
 
-Vous pourrez alors interagir avec votre service à l'aide des commandes habituelles `systemctl` :
+```bash
+[ ahliko@fedora ~ ] $systemctl status yt
+● yt.service - A youtube downloader :)
+     Loaded: loaded (/etc/systemd/system/yt.service; disabled; preset: disabled)
+     Active: active (running) since Wed 2023-01-11 02:01:22 CET; 1min 0s ago
+   Main PID: 12633 (yt-v2.sh)
+      Tasks: 2 (limit: 33427)
+     Memory: 592.0K
+        CPU: 16ms
+     CGroup: /system.slice/yt.service
+             ├─12633 /bin/bash /srv/yt/yt-v2.sh
+             └─12758 sleep 10
 
-- `systemctl status yt`
-- `sudo systemctl start yt`
-- `sudo systemctl stop yt`
+janv. 11 02:01:22 fedora systemd[1]: Started yt.service - A youtube downloader :).
+```
+```bash
+ahliko@fedora  ~  journalctl -xe -u yt
+░░ The unit yt.service has successfully entered the 'dead' state.
+janv. 11 01:55:13 fedora systemd[1]: Stopped yt.service - A youtube downloader :).
+░░ Subject: L'unité (unit) yt.service a terminé son arrêt
+░░ Defined-By: systemd
+░░ Support: https://lists.freedesktop.org/mailman/listinfo/systemd-devel
+░░ 
+░░ L'unité (unit) yt.service a terminé son arrêt.
+janv. 11 01:55:14 fedora systemd[1]: Started yt.service - A youtube downloader :).
+░░ Subject: L'unité (unit) yt.service a terminé son démarrage
+░░ Defined-By: systemd
+░░ Support: https://lists.freedesktop.org/mailman/listinfo/systemd-devel
+░░ 
+░░ L'unité (unit) yt.service a terminé son démarrage, avec le résultat done.
+janv. 11 01:55:36 fedora yt-v2.sh[11387]: Already download at : /srv/yt/downloads/The first ten seconds of never gonna give you up
+janv. 11 01:56:13 fedora yt-v2.sh[11387]: Video https://www.youtube.com/watch?v=EGohSsaCJOU was downloaded.
+janv. 11 01:56:13 fedora yt-v2.sh[11387]: File path : /srv/yt/downloads/The first ten seconds of never gonna give you up/The first ten seconds of never gonna give you up.mp4
+janv. 11 01:56:47 fedora systemd[1]: Stopping yt.service - A youtube downloader :)...
+░░ Subject: L'unité (unit) yt.service a commencé à s'arrêter
+░░ Defined-By: systemd
+░░ Support: https://lists.freedesktop.org/mailman/listinfo/systemd-devel
+░░ 
+░░ L'unité (unit) yt.service a commencé à s'arrêter.
+janv. 11 01:56:47 fedora systemd[1]: yt.service: Deactivated successfully.
+░░ Subject: Unit succeeded
+░░ Defined-By: systemd
+░░ Support: https://lists.freedesktop.org/mailman/listinfo/systemd-devel
+░░ 
+░░ The unit yt.service has successfully entered the 'dead' state.
+janv. 11 01:56:47 fedora systemd[1]: Stopped yt.service - A youtube downloader :).
+░░ Subject: L'unité (unit) yt.service a terminé son arrêt
+░░ Defined-By: systemd
+░░ Support: https://lists.freedesktop.org/mailman/listinfo/systemd-devel
+░░ 
+░░ L'unité (unit) yt.service a terminé son arrêt.
+janv. 11 01:56:47 fedora systemd[1]: yt.service: Consumed 3.492s CPU time.
+░░ Subject: Ressources consommées durant l'éxécution de l'unité (unit)
+░░ Defined-By: systemd
+░░ Support: https://lists.freedesktop.org/mailman/listinfo/systemd-devel
+░░ 
+░░ L'unité (unit) yt.service s'est arrêtée et a consommé les ressources indiquées.
+```
 
-![Now witness](./pics/now_witness.png)
 
-## Rendu
-
-📁 **Le script `/srv/yt/yt-v2.sh`**
-
-📁 **Fichier `/etc/systemd/system/yt.service`**
-
-🌞 Vous fournirez dans le compte-rendu, en plus des fichiers :
-
-- un `systemctl status yt` quand le service est en cours de fonctionnement
-- un extrait de `journalctl -xe -u yt`
-
-> Hé oui les commandes `journalctl` fonctionnent sur votre service pour voir les logs ! Et vous devriez constater que c'est vos `echo` qui pop. En résumé, **le STDOUT de votre script, c'est devenu les logs du service !**
-
-🌟**BONUS** : get fancy. Livrez moi un gif ou un [asciinema](https://asciinema.org/) (PS : c'est le feu asciinema) de votre service en action, où on voit les URLs de vidéos disparaître, et les fichiers apparaître dans le fichier de destination
+![https://asciinema.org/a/gvsXzq91E9X5K8ipP8C5cVimg](https://asciinema.org/a/gvsXzq91E9X5K8ipP8C5cVimg.png)
 
 # IV. Bonus
 
