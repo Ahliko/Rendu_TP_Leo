@@ -331,7 +331,7 @@ rich rules:
 🌞 **Accéder au site web**
 
 ```bash
- ahliko@fedora  ~  curl 10.4.0.3:80
+ [ ahliko@fedora ~ ]$ curl 10.4.0.3:80
 <!doctype html>
 <html>
   <head>
@@ -705,7 +705,7 @@ Jan 11 17:25:52 web.tp4.linux systemd[1]: Started The nginx HTTP and reverse pro
 LISTEN 0      511          0.0.0.0:8080      0.0.0.0:*    users:(("nginx",pid=4521,fd=6),("nginx",pid=4520,fd=6),("nginx",pid=4519,fd=6))
 
 
- ahliko@fedora  ~  curl 10.4.0.3:8080
+ [ ahliko@fedora ~ ]$ curl 10.4.0.3:8080
 <!doctype html>
 <html>
   <head>
@@ -1016,73 +1016,220 @@ LISTEN 0      511          0.0.0.0:8080      0.0.0.0:*    users:(("nginx",pid=45
 </html>
 ```
 
----
-
 🌞 **Changer l'utilisateur qui lance le service**
 
-- pour ça, vous créerez vous-même un nouvel utilisateur sur le système : `web`
-    - référez-vous au [mémo des commandes](../../cours/memos/commandes.md) pour la création d'utilisateur
-    - l'utilisateur devra avoir un mot de passe, et un homedir défini explicitement à `/home/web`
-- modifiez la conf de NGINX pour qu'il soit lancé avec votre nouvel utilisateur
-    - utilisez `grep` pour me montrer dans le fichier de conf la ligne que vous avez modifié
-- n'oubliez pas de redémarrer le service pour que le changement prenne effet
-- vous prouverez avec une commande `ps` que le service tourne bien sous ce nouveau utilisateur
-    - utilisez un `| grep` pour isoler les lignes intéressantes
+```bash
+[ahliko@web ~]$ sudo useradd web -m
 
----
+[ahliko@web ~]$ cat /etc/nginx/nginx.conf | grep user
+user web;
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+[ahliko@web ~]$ sudo systemctl restart nginx
+[ahliko@web ~]$ systemctl status nginx
+● nginx.service - The nginx HTTP and reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; vendor preset: disabled)
+     Active: active (running) since Thu 2023-01-12 00:23:30 CET; 14s ago
+    Process: 1357 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+    Process: 1358 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=0/SUCCESS)
+    Process: 1359 ExecStart=/usr/sbin/nginx (code=exited, status=0/SUCCESS)
+   Main PID: 1360 (nginx)
+      Tasks: 3 (limit: 48905)
+     Memory: 2.8M
+        CPU: 17ms
+     CGroup: /system.slice/nginx.service
+             ├─1360 "nginx: master process /usr/sbin/nginx"
+             ├─1361 "nginx: worker process"
+             └─1362 "nginx: worker process"
+
+Jan 12 00:23:30 web.tp4.linux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+Jan 12 00:23:30 web.tp4.linux nginx[1358]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+Jan 12 00:23:30 web.tp4.linux nginx[1358]: nginx: configuration file /etc/nginx/nginx.conf test is successful
+Jan 12 00:23:30 web.tp4.linux systemd[1]: Started The nginx HTTP and reverse proxy server.
+
+
+[ahliko@web ~]$ sudo ps -ef | grep web
+web         1361    1360  0 00:23 ?        00:00:00 nginx: worker process
+web         1362    1360  0 00:23 ?        00:00:00 nginx: worker process
+ahliko      1370    1271  0 00:24 pts/0    00:00:00 grep --color=auto web
+
+```
 
 **Il est temps d'utiliser ce qu'on a fait à la partie 2 !**
 
 🌞 **Changer l'emplacement de la racine Web**
 
-- configurez NGINX pour qu'il utilise une autre racine web que celle par défaut
-    - avec un `nano` ou `vim`, créez un fichiez `/var/www/site_web_1/index.html` avec un contenu texte bidon
-    - dans la conf de NGINX, configurez la racine Web sur `/var/www/site_web_1/`
-    - vous me montrerez la conf effectuée dans le compte-rendu, avec un `grep`
-- n'oubliez pas de redémarrer le service pour que le changement prenne effet
-- prouvez avec un `curl` depuis votre hôte que vous accédez bien au nouveau site
+```bash
+[ahliko@web ~]$ cat /var/www/site_web_1/index.html
+<!DOCTYPE html>
+<html>
+	<body>
+		<h1>hey</h1>
+	</body>
+</html>
 
-> **Normalement le dossier `/var/www/site_web_1/` est un dossier créé à la Partie 2 du TP**, et qui se trouve en réalité sur le serveur `storage.tp4.linux`, notre serveur NFS.
+[ahliko@web ~]$ cat /etc/nginx/nginx.conf | grep root
+        root         /var/www/site_web_1/;
+#        root         /usr/share/nginx/html;
 
-![MAIS](../pics/nop.png)
+
+[ahliko@web ~]$ sudo systemctl restart nginx
+[ahliko@web ~]$ systemctl status nginx
+● nginx.service - The nginx HTTP and reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; vendor preset: disabled)
+     Active: active (running) since Thu 2023-01-12 00:28:06 CET; 4s ago
+    Process: 1418 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+    Process: 1419 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=0/SUCCESS)
+    Process: 1420 ExecStart=/usr/sbin/nginx (code=exited, status=0/SUCCESS)
+   Main PID: 1421 (nginx)
+      Tasks: 3 (limit: 48905)
+     Memory: 2.8M
+        CPU: 19ms
+     CGroup: /system.slice/nginx.service
+             ├─1421 "nginx: master process /usr/sbin/nginx"
+             ├─1422 "nginx: worker process"
+             └─1423 "nginx: worker process"
+
+Jan 12 00:28:06 web.tp4.linux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+Jan 12 00:28:06 web.tp4.linux nginx[1419]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+Jan 12 00:28:06 web.tp4.linux nginx[1419]: nginx: configuration file /etc/nginx/nginx.conf test is successful
+Jan 12 00:28:06 web.tp4.linux systemd[1]: Started The nginx HTTP and reverse proxy server.
+
+
+ [ ahliko@fedora ~ ]$ curl 10.4.0.3:8080
+<!DOCTYPE html>
+<html>
+	<body>
+		<h1>hey</h1>
+	</body>
+</html>
+
+```
 
 ## 6. Deux sites web sur un seul serveur
 
-Dans la conf NGINX, vous avez du repérer un bloc `server { }` (si c'est pas le cas, allez le repérer, la ligne qui définit la racine web est contenu dans le bloc `server { }`).
-
-Un bloc `server { }` permet d'indiquer à NGINX de servir un site web donné.
-
-Si on veut héberger plusieurs sites web, il faut donc déclarer plusieurs blocs `server { }`.
-
-**Pour éviter que ce soit le GROS BORDEL dans le fichier de conf**, et se retrouver avec un fichier de 150000 lignes, on met chaque bloc `server` dans un fichier de conf dédié.
-
-Et le fichier de conf principal contient une ligne qui inclut tous les fichiers de confs additionnels.
-
 🌞 **Repérez dans le fichier de conf**
 
-- la ligne qui inclut des fichiers additionels contenus dans un dossier nommé `conf.d`
-- vous la mettrez en évidence avec un `grep`
+```bash
+[ahliko@web ~]$ cat /etc/nginx/nginx.conf | grep  conf.d
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    include /etc/nginx/conf.d/*.conf;
 
-> On trouve souvent ce mécanisme dans la conf sous Linux : un dossier qui porte un nom finissant par `.d` qui contient des fichiers de conf additionnels pour pas foutre le bordel dans le fichier de conf principal. On appelle ce dossier un dossier de *drop-in*.
+```
 
 🌞 **Créez le fichier de configuration pour le premier site**
 
-- le bloc `server` du fichier de conf principal, vous le sortez
-- et vous le mettez dans un fichier dédié
-- ce fichier dédié doit se trouver dans le dossier `conf.d`
-- ce fichier dédié doit porter un nom adéquat : `site_web_1.conf`
+```bash
+[ahliko@web ~]$ cat /etc/nginx/conf.d/site_web_1.conf
+server {
+        listen       8080;
+        listen       [::]:80;
+        server_name  _;
+        root         /var/www/site_web_1/;
+
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+```
 
 🌞 **Créez le fichier de configuration pour le deuxième site**
 
-- un nouveau fichier dans le dossier `conf.d`
-- il doit porter un nom adéquat : `site_web_2.conf`
-- copiez-collez le bloc `server { }` de l'autre fichier de conf
-- changez la racine web vers `/var/www/site_web_2/`
-- et changez le port d'écoute pour 8888
+```bash
+[ahliko@web ~]$ cat /etc/nginx/conf.d/site_web_2.conf
+server {
+        listen       8888;
+        listen       [::]:80;
+        server_name  _;
+        root         /var/www/site_web_2/;
 
-> N'oubliez pas d'ouvrir le port 8888 dans le firewall. Vous pouvez constater si vous le souhaitez avec un `ss` que NGINX écoute bien sur ce nouveau port.
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+    
+    
+ [ahliko@web ~]$ sudo firewall-cmd --add-port=8888/tcp --permanent
+success
+[ahliko@web ~]$ sudo firewall-cmd --reload
+success
+[ahliko@web ~]$ sudo firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: enp0s3 enp0s8
+  sources: 
+  services: cockpit dhcpv6-client ssh
+  ports: 8080/tcp 8888/tcp
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+[ahliko@web ~]$ sudo systemctl restart nginx
+[ahliko@web ~]$ systemctl status nginx
+● nginx.service - The nginx HTTP and reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; vendor preset: disabled)
+     Active: active (running) since Thu 2023-01-12 00:38:28 CET; 3s ago
+    Process: 1547 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+    Process: 1548 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=0/SUCCESS)
+    Process: 1549 ExecStart=/usr/sbin/nginx (code=exited, status=0/SUCCESS)
+   Main PID: 1550 (nginx)
+      Tasks: 3 (limit: 48905)
+     Memory: 2.9M
+        CPU: 18ms
+     CGroup: /system.slice/nginx.service
+             ├─1550 "nginx: master process /usr/sbin/nginx"
+             ├─1551 "nginx: worker process"
+             └─1552 "nginx: worker process"
+
+Jan 12 00:38:28 web.tp4.linux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+Jan 12 00:38:28 web.tp4.linux nginx[1548]: nginx: [warn] conflicting server name "_" on [::]:80, ignored
+Jan 12 00:38:28 web.tp4.linux nginx[1548]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+Jan 12 00:38:28 web.tp4.linux nginx[1548]: nginx: configuration file /etc/nginx/nginx.conf test is successful
+Jan 12 00:38:28 web.tp4.linux nginx[1549]: nginx: [warn] conflicting server name "_" on [::]:80, ignored
+Jan 12 00:38:28 web.tp4.linux systemd[1]: Started The nginx HTTP and reverse proxy server.
+
+[ahliko@web ~]$ sudo ss -alnpt | grep nginx
+LISTEN 0      511          0.0.0.0:8080      0.0.0.0:*    users:(("nginx",pid=1552,fd=6),("nginx",pid=1551,fd=6),("nginx",pid=1550,fd=6))
+LISTEN 0      511          0.0.0.0:8888      0.0.0.0:*    users:(("nginx",pid=1552,fd=8),("nginx",pid=1551,fd=8),("nginx",pid=1550,fd=8))
+LISTEN 0      511             [::]:80           [::]:*    users:(("nginx",pid=1552,fd=7),("nginx",pid=1551,fd=7),("nginx",pid=1550,fd=7))
+
+```
 
 🌞 **Prouvez que les deux sites sont disponibles**
 
-- depuis votre PC, deux commandes `curl`
-- pour choisir quel site visitez, vous choisissez un port spécifique
+```bash
+[ahliko@fedora ~]$ curl 10.4.0.3:8080
+<!DOCTYPE html>
+<html>
+	<body>
+		<h1>hey</h1>
+	</body>
+</html>
+[ahliko@fedora ~]$ curl 10.4.0.3:8888
+<!DOCTYPE html>
+<html>
+	<body>
+		<h1>Hey sur mon 2 ème site</h1>
+	</body>
+</html>
+```
