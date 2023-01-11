@@ -152,32 +152,5 @@ janv. 11 01:56:47 fedora systemd[1]: yt.service: Consumed 3.492s CPU time.
 
 # IV. Bonus
 
-Quelques bonus pour améliorer le fonctionnement de votre script :
-
 ➜ **en accord avec les règles de [ShellCheck](https://www.shellcheck.net/)**
-
-- bonnes pratiques, sécurité, lisibilité
-
-➜  **fonction `usage`**
-
-- le script comporte une fonction `usage`
-- c'est la fonction qui est appelée lorsque l'on appelle le script avec une erreur de syntaxe
-- ou lorsqu'on appelle le `-h` du script
-
-➜ **votre script a une gestion d'options :**
-
-- `-q` pour préciser la qualité des vidéos téléchargées (on peut choisir avec `youtube-dl`)
-- `-o` pour préciser un dossier autre que `/srv/yt/`
-- `-h` affiche l'usage
-
-➜ **si votre script utilise des commandes non-présentes à l'installation** (`youtube-dl`, `jq` éventuellement, etc.)
-
-- vous devez TESTER leur présence et refuser l'exécution du script
-
-➜  **si votre script a besoin de l'existence d'un dossier ou d'un utilisateur**
-
-- vous devez tester leur présence, sinon refuser l'exécution du script
-
-➜ **pour le téléchargement des vidéos**
-
 - vérifiez à l'aide d'une expression régulière que les strings saisies dans le fichier sont bien des URLs de vidéos Youtube
