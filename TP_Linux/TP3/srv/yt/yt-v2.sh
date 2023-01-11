@@ -36,7 +36,7 @@ file="/srv/yt/list_url.txt"
     while read -r line
     do
         if [[ -n ${line} ]]; then
-            if echo "${line}" | grep -q "https://www.youtube.com"; then
+            if echo "${line}" | grep ^"https://www.youtube.com" &> /dev/null; then
                 download-yt "${line}"
             else
                 echo "Its not a Youtube's url"
