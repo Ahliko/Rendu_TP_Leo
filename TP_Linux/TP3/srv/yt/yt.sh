@@ -1,6 +1,9 @@
 #!/bin/bash
 #05/01/2023
-#Scipt for download a youtube video since a url
+#------------------------------------------------
+# Created by : Killian Guillemot
+#------------------------------------------------
+#Script for download a youtube video since a url
 if [ ! -d "/srv/yt/downloads" ]; then
   echo "Dossier de destination introuvable. Arrêt du script."
   exit 1

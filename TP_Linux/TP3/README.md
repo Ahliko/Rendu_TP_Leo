@@ -152,5 +152,6 @@ janv. 11 01:56:47 fedora systemd[1]: yt.service: Consumed 3.492s CPU time.
 
 # IV. Bonus
 
-➜ **en accord avec les règles de [ShellCheck](https://www.shellcheck.net/)**
-- vérifiez à l'aide d'une expression régulière que les strings saisies dans le fichier sont bien des URLs de vidéos Youtube
+## Rendu
+
+[yt-v3.sh Ici :) :D](/srv/yt/yt-v3.sh)
