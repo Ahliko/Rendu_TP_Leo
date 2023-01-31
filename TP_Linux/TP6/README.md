@@ -751,3 +751,576 @@ Jan 31 13:33:44 proxy.tp6.linux systemd[1]: Started The nginx HTTP and reverse p
 * Connection #0 to host www.nextcloud.tp6 left intact
 ```
 
+# Module 2 : Sauvegarde du système de fichiers
+
+## Sommaire
+
+- [Module 2 : Sauvegarde du système de fichiers](#module-2--sauvegarde-du-système-de-fichiers)
+  - [Sommaire](#sommaire)
+  - [I. Script de backup](#i-script-de-backup)
+    - [1. Ecriture du script](#1-ecriture-du-script)
+    - [2. Clean it](#2-clean-it)
+    - [3. Service et timer](#3-service-et-timer)
+  - [II. NFS](#ii-nfs)
+    - [1. Serveur NFS](#1-serveur-nfs)
+    - [2. Client NFS](#2-client-nfs)
+
+## I. Script de backup
+
+### 1. Ecriture du script
+
+🌞 **Ecrire le script `bash`**
+
+```bash
+[ahliko@web tp5_nextcloud]$ cat /srv/tp6_backup.sh
+#!/bin/bash
+# -----------------------------------
+# 31/01/2023
+# Script written by Killian Guillemot
+# V1.0
+# -----------------------------------
+# Script for backup nextcloud's data
+
+/usr/bin/php81 /var/www/tp5_nextcloud/occ maintenance:mode --on
+
+backup_root="/srv/backup/"
+backup_ext=".tar.gz"
+date_now=$(date +"%Y%m%d")
+
+nc_root="/var/www/tp5_nextcloud/"
+nc_conf="${nc_root}/config/"
+nc_data="${nc_root}/data/"
+nc_themes="${nc_root}/themes/"
+
+tar -czvf "${backup_root}/nextcloud_${date_now}${backup_ext}" "${nc_conf}" "${nc_data}" "${nc_themes}"
+
+/usr/bin/php81 /var/www/tp5_nextcloud/occ maintenance:mode --off
+```
+
+### 2. Clean it
+
+```bash
+[ahliko@web ~]$ sudo useradd backup -m -d /srv/backup -s /usr/sbin/nologin
+[ahliko@web ~]$ sudo passwd backup
+[ahliko@web ~]$ sudo usermod -aG wheel backup
+[ahliko@web ~]$ sudo chown backup:backup -R /srv/backup
+[ahliko@web ~]$ sudo chown backup:backup -R /srv/tp6_backup.sh
+[ahliko@web ~]$ ls -al /srv
+total 4
+drwxr-xr-x.  3 root   root    41 Jan 31 14:24 .
+dr-xr-xr-x. 18 root   root   235 Jan 31 14:16 ..
+drwxr-xr-x.  2 backup backup   6 Jan 31 14:00 backup
+-rw-r--r--.  1 backup backup 604 Jan 31 14:24 tp6_backup.sh
+
+```
+
+```bash
+[ahliko@web tp5_nextcloud]$ sudo -u backup sudo bash /srv/tp6_backup.sh
+The current PHP memory limit is below the recommended value of 512MB.
+Maintenance mode enabled
+tar: Removing leading `/' from member names
+/var/www/tp5_nextcloud//config/
+/var/www/tp5_nextcloud//config/config.sample.php
+tar: Removing leading `/' from hard link targets
+/var/www/tp5_nextcloud//config/.htaccess
+/var/www/tp5_nextcloud//config/config.php
+/var/www/tp5_nextcloud//data/
+/var/www/tp5_nextcloud//data/.htaccess
+/var/www/tp5_nextcloud//data/index.html
+/var/www/tp5_nextcloud//data/nextcloud.log
+/var/www/tp5_nextcloud//data/.ocdata
+/var/www/tp5_nextcloud//data/ahliko/
+/var/www/tp5_nextcloud//data/ahliko/files/
+/var/www/tp5_nextcloud//data/ahliko/files/Documents/
+/var/www/tp5_nextcloud//data/ahliko/files/Documents/Nextcloud flyer.pdf
+/var/www/tp5_nextcloud//data/ahliko/files/Documents/Example.md
+/var/www/tp5_nextcloud//data/ahliko/files/Documents/Welcome to Nextcloud Hub.docx
+/var/www/tp5_nextcloud//data/ahliko/files/Documents/Readme.md
+/var/www/tp5_nextcloud//data/ahliko/files/Nextcloud Manual.pdf
+/var/www/tp5_nextcloud//data/ahliko/files/Nextcloud.png
+/var/www/tp5_nextcloud//data/ahliko/files/Reasons to use Nextcloud.pdf
+/var/www/tp5_nextcloud//data/ahliko/files/Nextcloud intro.mp4
+/var/www/tp5_nextcloud//data/ahliko/files/Photos/
+/var/www/tp5_nextcloud//data/ahliko/files/Photos/Frog.jpg
+/var/www/tp5_nextcloud//data/ahliko/files/Photos/Nextcloud community.jpg
+/var/www/tp5_nextcloud//data/ahliko/files/Photos/Library.jpg
+/var/www/tp5_nextcloud//data/ahliko/files/Photos/Birdie.jpg
+/var/www/tp5_nextcloud//data/ahliko/files/Photos/Toucan.jpg
+/var/www/tp5_nextcloud//data/ahliko/files/Photos/Vineyard.jpg
+/var/www/tp5_nextcloud//data/ahliko/files/Photos/Steps.jpg
+/var/www/tp5_nextcloud//data/ahliko/files/Photos/Readme.md
+/var/www/tp5_nextcloud//data/ahliko/files/Photos/Gorilla.jpg
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Org chart.odg
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Product plan.md
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Letter.odt
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Meeting notes.md
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Mindmap.odg
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Elegant.odp
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/SWOT analysis.whiteboard
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Expense report.ods
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Simple.odp
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Invoice.odt
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Flowchart.odg
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Business model canvas.odg
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Impact effort matrix.whiteboard
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Diagram & table.ods
+/var/www/tp5_nextcloud//data/ahliko/files/Modèles/Readme.md
+/var/www/tp5_nextcloud//data/ahliko/cache/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/js/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/js/core/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/js/core/merged-template-prepend.js
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/js/core/merged-template-prepend.js.deps
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/js/core/merged-template-prepend.js.gzip
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/js/files/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/js/files/merged-index.js
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/js/files/merged-index.js.deps
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/js/files/merged-index.js.gzip
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/appstore/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/appstore/apps.json
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/avatar/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/avatar/ahliko/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/avatar/ahliko/avatar.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/avatar/ahliko/generated
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/avatar/ahliko/avatar.64.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/avatar/ahliko/avatar-dark.64.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/f/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/f/4/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/f/4/9/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/f/4/9/2/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/f/4/9/2/2/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/f/4/9/2/2/f/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/f/4/9/2/2/f/18/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/f/4/9/2/2/f/18/236-255-max.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/f/4/9/2/2/f/18/236-236-crop.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/3/6/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/3/6/4/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/3/6/4/d/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/3/6/4/d/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/3/6/4/d/3/f/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/3/6/4/d/3/f/32/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/3/6/4/d/3/f/32/1600-1067-max.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/3/6/4/d/3/f/32/1024-1024-crop.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/e/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/e/a/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/e/a/9/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/e/a/9/a/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/e/a/9/a/b/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/e/a/9/a/b/1/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/e/a/9/a/b/1/29/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/e/a/9/a/b/1/29/1600-1067-max.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/6/e/a/9/a/b/1/29/1024-1024-crop.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/f/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/f/0/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/f/0/e/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/f/0/e/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/f/0/e/3/d/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/f/0/e/3/d/a/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/f/0/e/3/d/a/19/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/f/0/e/3/d/a/19/256-144-max.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/f/0/e/3/d/a/19/144-144-crop.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/9/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/9/c/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/9/c/a/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/9/c/a/1/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/9/c/a/1/4/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/9/c/a/1/4/e/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/9/c/a/1/4/e/36/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/9/c/a/1/4/e/36/4096-4096-max.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/9/c/a/1/4/e/36/1024-1024-crop.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/8/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/8/2/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/8/2/b/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/8/2/b/e/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/8/2/b/e/0/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/8/2/b/e/0/c/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/8/2/b/e/0/c/33/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/8/2/b/e/0/c/33/1600-1067-max.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/8/2/b/e/0/c/33/1024-1024-crop.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/c/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/c/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/c/3/8/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/c/3/8/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/c/3/8/3/c/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/c/3/8/3/c/d/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/c/3/8/3/c/d/35/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/c/3/8/3/c/d/35/1200-1800-max.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/1/c/3/8/3/c/d/35/1024-1024-crop.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/7/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/7/4/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/7/4/d/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/7/4/d/9/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/7/4/d/9/7/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/7/4/d/9/7/b/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/7/4/d/9/7/b/16/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/7/4/d/9/7/b/16/256-144-max.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/7/4/d/9/7/b/16/144-144-crop.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/1/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/1/6/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/1/6/a/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/1/6/a/5/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/1/6/a/5/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/1/6/a/5/3/2/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/1/6/a/5/3/2/31/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/1/6/a/5/3/2/31/1600-1066-max.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/c/1/6/a/5/3/2/31/1024-1024-crop.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/8/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/8/f/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/8/f/1/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/8/f/1/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/8/f/1/3/7/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/8/f/1/3/7/0/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/8/f/1/3/7/0/20/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/8/f/1/3/7/0/20/181-256-max.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/8/f/1/3/7/0/20/181-181-crop.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/b/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/b/f/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/b/f/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/b/f/3/1/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/b/f/3/1/c/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/b/f/3/1/c/7/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/b/f/3/1/c/7/15/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/b/f/3/1/c/7/15/256-181-max.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/b/f/3/1/c/7/15/181-181-crop.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/9/500-500-max.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/c/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/c/5/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/c/5/9/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/c/5/9/d/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/c/5/9/d/c/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/c/5/9/d/c/0/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/c/5/9/d/c/0/21/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/c/5/9/d/c/0/21/181-256-max.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/c/5/9/d/c/0/21/181-181-crop.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/4/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/4/1/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/4/1/7/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/4/1/7/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/4/1/7/3/c/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/4/1/7/3/c/b/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/4/1/7/3/c/b/30/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/4/1/7/3/c/b/30/3000-2000-max.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/3/4/1/7/3/c/b/30/1024-1024-crop.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/a/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/a/5/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/a/5/b/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/a/5/b/f/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/a/5/b/f/c/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/a/5/b/f/c/9/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/a/5/b/f/c/9/e/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/a/5/b/f/c/9/e/37/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/a/5/b/f/c/9/e/37/1600-1067-max.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/a/5/b/f/c/9/e/37/1024-1024-crop.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/3/6/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/3/6/9/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/3/6/9/8/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/3/6/9/8/5/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/3/6/9/8/5/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/3/6/9/8/5/3/34/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/3/6/9/8/5/3/34/1920-1281-max.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/3/6/9/8/5/3/34/1024-1024-crop.jpg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/4/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/4/d/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/4/d/a/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/4/d/a/3/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/4/d/a/3/b/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/4/d/a/3/b/7/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/4/d/a/3/b/7/5/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/4/d/a/3/b/7/5/4096-4096-max.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/e/4/d/a/3/b/7/5/1024-1024-crop.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/8/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/8/f/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/8/f/1/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/8/f/1/4/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/8/f/1/4/e/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/8/f/1/4/e/4/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/8/f/1/4/e/4/5/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/8/f/1/4/e/4/5/7/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/8/f/1/4/e/4/5/7/4096-4096-max.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/preview/8/f/1/4/e/4/5/7/1024-1024-crop.png
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/theming/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/theming/108/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/theming/108/icon-core-filetypes_x-office-document.svg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/theming/108/icon-core-filetypes_file.svg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/theming/108/icon-core-filetypes_x-office-presentation.svg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/theming/108/icon-core-filetypes_x-office-drawing.svg
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/text/
+/var/www/tp5_nextcloud//data/appdata_oc0osczckf2e/text/documents/
+/var/www/tp5_nextcloud//data/files_external/
+/var/www/tp5_nextcloud//data/files_external/rootcerts.crt
+/var/www/tp5_nextcloud//themes/
+/var/www/tp5_nextcloud//themes/example/
+/var/www/tp5_nextcloud//themes/example/core/
+/var/www/tp5_nextcloud//themes/example/core/img/
+/var/www/tp5_nextcloud//themes/example/core/img/favicon.svg
+/var/www/tp5_nextcloud//themes/example/core/img/logo.png
+/var/www/tp5_nextcloud//themes/example/core/img/favicon-touch.png
+/var/www/tp5_nextcloud//themes/example/core/img/logo-icon.png
+/var/www/tp5_nextcloud//themes/example/core/img/logo-mail.gif
+/var/www/tp5_nextcloud//themes/example/core/img/favicon-touch.svg
+/var/www/tp5_nextcloud//themes/example/core/img/favicon.png
+/var/www/tp5_nextcloud//themes/example/core/img/logo.svg
+/var/www/tp5_nextcloud//themes/example/core/img/logo-icon.svg
+/var/www/tp5_nextcloud//themes/example/core/img/favicon.ico
+/var/www/tp5_nextcloud//themes/example/core/css/
+/var/www/tp5_nextcloud//themes/example/core/css/server.css
+/var/www/tp5_nextcloud//themes/example/defaults.php
+/var/www/tp5_nextcloud//themes/README
+The current PHP memory limit is below the recommended value of 512MB.
+Maintenance mode disabled
+
+[ahliko@web tp5_nextcloud]$ ls -al /srv/backup/
+total 30888
+drwxr-xr-x. 2 backup backup       39 Jan 31 14:37 .
+drwxr-xr-x. 3 root   root         41 Jan 31 14:36 ..
+-rw-r--r--. 1 backup backup 31626414 Jan 31 14:37 nextcloud_20230131.tar.gz
+```
+
+### 3. Service et timer
+
+🌞 **Créez un *service*** système qui lance le script
+
+```bash
+[ahliko@web ~]$ cat /etc/systemd/system/backup.service
+[Unit]
+Description=Backup The Nextcloud Server
+ 
+[Service]
+Type=oneshot
+User=backup 
+ExecStart=bash /srv/tp6_backup.sh
+
+[Install]
+WantedBy=multi-user.target
+
+[ahliko@web ~]$ sudo systemctl daemon-reload
+```
+
+```bash
+[ahliko@web ~]$ sudo systemctl start backup
+[ahliko@web ~]$ systemctl status backup
+○ backup.service - Backup The Nextcloud Server
+     Loaded: loaded (/etc/systemd/system/backup.service; disabled; vendor preset: disabled)
+     Active: inactive (dead)
+
+Jan 31 14:51:22 web.tp6.linux bash[13263]: /var/www/tp5_nextcloud//themes/example/core/css/server.css
+Jan 31 14:51:22 web.tp6.linux bash[13263]: /var/www/tp5_nextcloud//themes/example/defaults.php
+Jan 31 14:51:22 web.tp6.linux bash[13263]: /var/www/tp5_nextcloud//themes/README
+Jan 31 14:51:22 web.tp6.linux bash[13263]: tar: Exiting with failure status due to previous errors
+Jan 31 14:51:22 web.tp6.linux bash[13265]: Cannot write into "config" directory!
+Jan 31 14:51:22 web.tp6.linux bash[13265]: This can usually be fixed by giving the web server write access to the config directory.
+Jan 31 14:51:22 web.tp6.linux bash[13265]: But, if you prefer to keep config.php file read only, set the option "config_is_read_only" to true in it.
+Jan 31 14:51:22 web.tp6.linux bash[13265]: See https://docs.nextcloud.com/server/25/go.php?to=admin-config
+Jan 31 14:51:22 web.tp6.linux systemd[1]: backup.service: Deactivated successfully.
+Jan 31 14:51:22 web.tp6.linux systemd[1]: Finished Backup The Nextcloud Server.
+```
+
+🌞 **Créez un *timer*** système qui lance le *service* à intervalles réguliers
+
+```bash
+[ahliko@web ~]$ cat /etc/systemd/system/backup.timer
+[Unit]
+Description=Run service backup
+
+[Timer]
+OnCalendar=*-*-* 4:00:00
+
+[Install]
+WantedBy=timers.target
+
+[ahliko@web ~]$ sudo systemctl daemon-reload
+```
+
+🌞 Activez l'utilisation du *timer*
+
+```bash
+[ahliko@web ~]$ sudo systemctl start backup.timer
+[ahliko@web ~]$ sudo systemctl enable backup.timer
+Created symlink /etc/systemd/system/timers.target.wants/backup.timer → /etc/systemd/system/backup.timer.
+[ahliko@web ~]$ sudo systemctl status backup.timer
+● backup.timer - Run service backup
+     Loaded: loaded (/etc/systemd/system/backup.timer; enabled; vendor preset: disabled)
+     Active: active (waiting) since Tue 2023-01-31 15:00:26 CET; 10s ago
+      Until: Tue 2023-01-31 15:00:26 CET; 10s ago
+    Trigger: Wed 2023-02-01 04:00:00 CET; 12h left
+   Triggers: ● backup.service
+
+Jan 31 15:00:26 web.tp6.linux systemd[1]: Started Run service backup.
+[ahliko@web ~]$ sudo systemctl list-timers
+NEXT                        LEFT       LAST                        PASSED       UNIT                         ACTIVATES                     
+Tue 2023-01-31 15:51:00 CET 50min left Tue 2023-01-31 14:28:14 CET 32min ago    dnf-makecache.timer          dnf-makecache.service
+Wed 2023-02-01 00:00:00 CET 8h left    Tue 2023-01-31 09:43:12 CET 5h 17min ago logrotate.timer              logrotate.service
+Wed 2023-02-01 04:00:00 CET 12h left   n/a                         n/a          backup.timer                 backup.service
+Wed 2023-02-01 12:25:51 CET 21h left   Tue 2023-01-31 12:25:51 CET 2h 34min ago systemd-tmpfiles-clean.timer systemd-tmpfiles-clean.service
+
+4 timers listed.
+Pass --all to see loaded but inactive timers, too.
+```
+
+## II. NFS
+
+### 1. Serveur NFS
+
+🌞 **Préparer un dossier à partager sur le réseau** (sur la machine `storage.tp6.linux`)
+
+```bash
+[ahliko@localhost ~]$ sudo mkdir /srv/nfs_shares/web.tp6.linux/ -p
+```
+
+🌞 **Installer le serveur NFS** (sur la machine `storage.tp6.linux`)
+
+```bash
+[ahliko@localhost ~]$ sudo dnf install nfs-utils -y
+[ahliko@localhost ~]$ sudo chown -R nobody /srv/nfs_shares/
+[ahliko@localhost ~]$ ls -al /srv
+total 0
+drwxr-xr-x.  3 root   root  24 Jan 31 16:01 .
+dr-xr-xr-x. 18 root   root 235 Jan  3 10:18 ..
+drwxr-xr-x.  3 nobody root  27 Jan 31 16:01 nfs_shares
+
+[ahliko@localhost ~]$ cat /etc/exports
+/srv/nfs_shares/web.tp6.linux/    10.105.1.11(rw,sync,no_subtree_check)
+[ahliko@localhost ~]$ sudo firewall-cmd --permanent --add-service=nfs
+sudo firewall-cmd --permanent --add-service=mountd
+sudo firewall-cmd --permanent --add-service=rpc-bind
+sudo firewall-cmd --reload
+success
+success
+success
+success
+
+[ahliko@localhost ~]$ sudo systemctl start nfs-server
+[ahliko@localhost ~]$ sudo systemctl enable nfs-server
+Created symlink /etc/systemd/system/multi-user.target.wants/nfs-server.service → /usr/lib/systemd/system/nfs-server.service.
+[ahliko@localhost ~]$ systemctl status nfs-server
+● nfs-server.service - NFS server and services
+     Loaded: loaded (/usr/lib/systemd/system/nfs-server.service; enabled; vendor preset: disabled)
+    Drop-In: /run/systemd/generator/nfs-server.service.d
+             └─order-with-mounts.conf
+     Active: active (exited) since Tue 2023-01-31 16:10:07 CET; 11s ago
+   Main PID: 18040 (code=exited, status=0/SUCCESS)
+        CPU: 18ms
+
+Jan 31 16:10:07 localhost.localdomain systemd[1]: Starting NFS server and services...
+Jan 31 16:10:07 localhost.localdomain systemd[1]: Finished NFS server and services.
+```
+
+### 2. Client NFS
+
+🌞 **Installer un client NFS sur `web.tp6.linux`**
+  
+```bash
+[ahliko@web ~]$ sudo dnf install nfs-utils -y
+[ahliko@web ~]$ sudo mount 10.105.1.14:/srv/nfs_shares/web.tp6.linux/ /srv/backup
+
+[ahliko@web ~]$ cat /etc/fstab 
+
+#
+# /etc/fstab
+# Created by anaconda on Tue Jan  3 09:18:37 2023
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk/'.
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info.
+#
+# After editing this file, run 'systemctl daemon-reload' to update systemd
+# units generated from this file.
+#
+/dev/mapper/rl-root     /                       xfs     defaults        0 0
+UUID=0a370dd9-7012-4d29-b16e-96f5cadde8e3 /boot                   xfs     defaults        0 0
+/dev/mapper/rl-swap     none                    swap    defaults        0 0
+10.105.1.14:/srv/nfs_shares/web.tp6.linux/ /srv/backup nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
+
+```
+
+🌞 **Tester la restauration des données** sinon ça sert à rien :)
+
+```bash
+tar -xvf /srv/backup/backup.tar.gz -C /srv/backup/localbak
+
+rsync -Aax /srv/backup/localbak/config /nextcloud/config
+rsync -Aax /srv/backup/localbak/data /nextcloud/data
+rsync -Aax /srv/backup/localbak/themes /nextcloud/themes
+
+rm -rf /srv/backup/localbak
+```
+
+# Module 3 : Fail2Ban
+
+🌞 Faites en sorte que :
+
+```bash
+[ahliko@localhost ~]$ cat install_fail2ban.sh
+#!/bin/bash
+#---------------------------------
+# By Killian Guillemot
+# 31/01/2023
+# V1.0
+#---------------------------------
+# Script to Install Fail2Ban on Rocky Linux 9
+
+########################################
+# Install epel-release
+########################################
+dnf install epel-release -y
+
+########################################
+# Install Fail2Ban
+########################################
+dnf install fail2ban -y
+
+cp jail.local /etc/fail2ban/jail.local
+
+systemctl start fail2ban
+systemctl enable fail2ban
+```
+
+```bash
+[ahliko@web ~]$ cat /etc/fail2ban/jail.local | grep find -A 3
+# A host is banned if it has generated "maxretry" during the last "findtime"
+# seconds.
+findtime  = 10m
+
+# "maxretry" is the number of failures before a host get banned.
+maxretry = 5
+
+[ahliko@web ~]$ sudo fail2ban-client status sshd
+[sudo] password for ahliko: 
+Status for the jail: sshd
+|- Filter
+|  |- Currently failed:	0
+|  |- Total failed:	3
+|  `- Journal matches:	_SYSTEMD_UNIT=sshd.service + _COMM=sshd
+`- Actions
+   |- Currently banned:	1
+   |- Total banned:	1
+   `- Banned IP list:	10.105.1.13
+   
+[ahliko@web ~]$ journalctl -xe -u sshd.service -f
+
+Jan 31 16:59:06 web.tp6.linux unix_chkpwd[15290]: password check failed for user (ahliko)
+Jan 31 16:59:08 web.tp6.linux sshd[15287]: Failed password for ahliko from 10.105.1.13 port 55380 ssh2
+Jan 31 16:59:09 web.tp6.linux kernel: Warning: Deprecated Driver is detected: nft_compat will not be maintained in a future major release and may be disabled
+Jan 31 16:59:39 web.tp6.linux sudo[15308]:   ahliko : TTY=pts/0 ; PWD=/etc/fail2ban ; USER=root ; COMMAND=/bin/fail2ban-client status sshd
+Jan 31 16:59:39 web.tp6.linux sudo[15308]: pam_unix(sudo:session): session opened for user root(uid=0) by ahliko(uid=1000)
+Jan 31 16:59:39 web.tp6.linux sudo[15308]: pam_unix(sudo:session): session closed for user root
+Jan 31 17:01:00 web.tp6.linux sshd[15287]: fatal: Timeout before authentication for 10.105.1.13 port 55380
+Jan 31 17:01:01 web.tp6.linux CROND[15312]: (root) CMD (run-parts /etc/cron.hourly)
+Jan 31 17:01:01 web.tp6.linux run-parts[15315]: (/etc/cron.hourly) starting 0anacron
+Jan 31 17:01:01 web.tp6.linux run-parts[15321]: (/etc/cron.hourly) finished 0anacron
+Jan 31 17:01:01 web.tp6.linux CROND[15311]: (root) CMDEND (run-parts /etc/cron.hourly)
+Jan 31 17:10:51 web.tp6.linux sudo[15364]:   ahliko : TTY=pts/0 ; PWD=/home/ahliko ; USER=root ; COMMAND=/bin/fail2ban-client status sshd
+Jan 31 17:10:51 web.tp6.linux sudo[15364]: pam_unix(sudo:session): session opened for user root(uid=0) by ahliko(uid=1000)
+Jan 31 17:10:51 web.tp6.linux sudo[15364]: pam_unix(sudo:session): session closed for user root
+
+[ahliko@web ~]$ fail2ban-client set ssh unbanip 10.105.1.13
+```
