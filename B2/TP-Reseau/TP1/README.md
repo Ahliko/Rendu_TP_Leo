@@ -153,10 +153,10 @@ rtt min/avg/max/mdev = 11.615/13.722/15.829/2.107 ms
 
 
 
-![Sans titre.png](..%2F..%2F..%2F..%2F..%2FImages%2FSans%20titre.png)
-- l'adresse IP du serveur auquel vous êtes connectés pour regarder la vidéo ===> 1
-- le port du serveur auquel vous êtes connectés ===> 3
-- le port que votre PC a ouvert en local pour se connecter au port du serveur distant ====> 2
+![Capture 1.png](Capture%201.png)
+- l'adresse IP du serveur auquel vous êtes connectés pour regarder la vidéo ⇒ 1
+- le port du serveur auquel vous êtes connectés ⇒ 2
+- le port que votre PC a ouvert en local pour se connecter au port du serveur distant =⇒ 3
 
 ---
 
@@ -236,33 +236,22 @@ traceroute to www.ynov.com (104.26.10.233), 30 hops max, 60 byte packets
 ☀️ **Scan réseau**
 
 - combien il y a de machines dans le LAN auquel vous êtes connectés
-  (nmap)
 ```bash
-
+[ahliko@ahliko-PC ~]$ sudo nmap -sn 10.33.64.136/20
+Nmap done: 4096 IP addresses (863 hosts up) scanned in 201.50 seconds
 ```
 
 # III. Le requin
-
-Faites chauffer Wireshark. Pour chaque point, je veux que vous me livrez une capture Wireshark, format `.pcap` donc.
-
-Faites *clean* 🧹, vous êtes des grands now :
-
-- livrez moi des captures réseau avec uniquement ce que je demande et pas 40000 autres paquets autour
-    - vous pouvez sélectionner seulement certains paquets quand vous enregistrez la capture dans Wireshark
-- stockez les fichiers `.pcap` dans le dépôt git et côté rendu Markdown, vous me faites un lien vers le fichier, c'est cette syntaxe :
-
-```markdown
-[Lien vers capture ARP](./captures/arp.pcap)
-```
-
----
 
 ☀️ **Capture ARP**
 
 - 📁 fichier `arp.pcap`
 - capturez un échange ARP entre votre PC et la passerelle du réseau
 
-> Si vous utilisez un filtre Wireshark pour mieux voir ce trafic, précisez-le moi dans le compte-rendu.
+[arp.pcap](arp.pcap)
+
+Avec le filtre 'arp'
+
 
 ---
 
@@ -272,7 +261,12 @@ Faites *clean* 🧹, vous êtes des grands now :
 - capturez une requête DNS vers le domaine de votre choix et la réponse
 - vous effectuerez la requête DNS en ligne de commande
 
-> Si vous utilisez un filtre Wireshark pour mieux voir ce trafic, précisez-le moi dans le compte-rendu.
+[dns.pcap](dns.pcap)
+```bash
+[ahliko@ahliko-PC ~]$ drill -x 174.43.238.89
+```
+Avec le filtre 'dns'
+
 
 ---
 
@@ -285,10 +279,6 @@ Faites *clean* 🧹, vous êtes des grands now :
     - un peu de trafic
     - la fin de la connexion TCP
 
-> Si vous utilisez un filtre Wireshark pour mieux voir ce trafic, précisez-le moi dans le compte-rendu.
+[tcp.pcap](tcp.pcap)
 
----
-
-![Packet sniffer](img/wireshark.jpg)
-
-> *Je sais que je vous l'ai déjà servi l'an dernier lui, mais j'aime trop ce meme hihi 🐈*
+Avec le filtre 'tcp.stream eq 15'
