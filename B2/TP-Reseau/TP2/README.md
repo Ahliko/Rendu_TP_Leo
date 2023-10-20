@@ -512,5 +512,3 @@ LISTEN 0      511             [::]:80           [::]:*    users:(("nginx",pid=13
 </html>
 
 ```
-
-![That's all folks](./img/thatsall.jpg)
