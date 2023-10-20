@@ -295,31 +295,57 @@ Oct 19 20:29:15 dhcp.lan1.tp2 systemd[1]: Started DHCPv4 Server Daemon.
 ☀️ **Sur `node1.lan1.tp2`**
 
 - demandez une IP au serveur DHCP
+
+```bash
+[ahliko@node1 ~]$ cat /etc/sysconfig/network-scripts/ifcfg-enp0s8
+NAME=enp0s8
+DEVICE=enp0s8
+
+BOOTPROTO=dhcp
+ONBOOT=yes
+```
+
 - prouvez que vous avez bien récupéré une IP *via* le DHCP
+
+```bash
+[ahliko@node1 ~]$ ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: enp0s8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:7b:9a:e1 brd ff:ff:ff:ff:ff:ff
+    inet 10.1.1.100/24 brd 10.1.1.255 scope global dynamic noprefixroute enp0s8
+       valid_lft 563sec preferred_lft 563sec
+    inet6 fe80::a00:27ff:fe7b:9ae1/64 scope link 
+       valid_lft forever preferred_lft forever
+```
+
 - prouvez que vous avez bien récupéré l'IP de la passerelle
+
+```bash
+[ahliko@node1 ~]$ ip r s
+default via 10.1.1.254 dev enp0s8 proto dhcp src 10.1.1.100 metric 100 
+10.1.1.0/24 dev enp0s8 proto kernel scope link src 10.1.1.100 metric 100
+```
+
 - prouvez que vous pouvez `ping node1.lan2.tp2`
 
+```bash
+[ahliko@node1 ~]$ ping node1.lan2.tp2
+PING node1.lan2.tp2 (10.1.2.11) 56(84) bytes of data.
+64 bytes from node1.lan2.tp2 (10.1.2.11): icmp_seq=1 ttl=63 time=0.444 ms
+64 bytes from node1.lan2.tp2 (10.1.2.11): icmp_seq=2 ttl=63 time=0.449 ms
+64 bytes from node1.lan2.tp2 (10.1.2.11): icmp_seq=3 ttl=63 time=0.462 ms
+^C
+--- node1.lan2.tp2 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2085ms
+rtt min/avg/max/mdev = 0.444/0.451/0.462/0.007 ms
+```
+
 ## 2. Web web web
-
-Un petit serveur web ? Pour la route ?
-
-On recycle ici, toujours dans un soucis d'économie de ressources, la machine `node2.lan2.tp2` qui devient `web.lan2.tp2`. On va y monter un serveur Web qui mettra à disposition un site web tout nul.
-
----
-
-La conf du serveur web :
-
-- ce sera notre vieil ami NGINX
-- il écoutera sur le port 80, port standard pour du trafic HTTP
-- la racine web doit se trouver dans `/var/www/site_nul/`
-    - vous y créerez un fichier `/var/www/site_nul/index.html` avec le contenu de votre choix
-- vous ajouterez dans la conf NGINX **un fichier dédié** pour servir le site web nul qui se trouve dans `/var/www/site_nul/`
-    - écoute sur le port 80
-    - répond au nom `site_nul.tp2`
-    - sert le dossier `/var/www/site_nul/`
-- n'oubliez pas d'ouvrir le port dans le firewall 🌼
-
----
 
 ☀️ **Sur `web.lan2.tp2`**
 
@@ -333,9 +359,158 @@ La conf du serveur web :
 - prouvez qu'il y a un programme NGINX qui tourne derrière le port 80 de la machine (commande `ss`)
 - prouvez que le firewall est bien configuré
 
+```bash
+[ahliko@web ~]$ cat /etc/hostname
+web.lan2.tp1
+[ahliko@web ~]$ sudo dnf install nginx
+Rocky Linux 9 - BaseOS                                           7.8 kB/s | 4.1 kB     00:00    
+Rocky Linux 9 - BaseOS                                           3.4 MB/s | 1.9 MB     00:00    
+Rocky Linux 9 - AppStream                                         14 kB/s | 4.5 kB     00:00    
+Rocky Linux 9 - AppStream                                        6.3 MB/s | 7.1 MB     00:01    
+Rocky Linux 9 - Extras                                            11 kB/s | 2.9 kB     00:00    
+Dependencies resolved.
+=================================================================================================
+ Package                   Architecture   Version                        Repository         Size
+=================================================================================================
+Installing:
+ nginx                     x86_64         1:1.20.1-14.el9_2.1            appstream          36 k
+Installing dependencies:
+ nginx-core                x86_64         1:1.20.1-14.el9_2.1            appstream         565 k
+ nginx-filesystem          noarch         1:1.20.1-14.el9_2.1            appstream         8.5 k
+ rocky-logos-httpd         noarch         90.14-1.el9                    appstream          24 k
+
+Transaction Summary
+=================================================================================================
+Install  4 Packages
+
+Total download size: 634 k
+Installed size: 1.8 M
+Is this ok [y/N]: y
+Downloading Packages:
+(1/4): nginx-filesystem-1.20.1-14.el9_2.1.noarch.rpm             116 kB/s | 8.5 kB     00:00    
+(2/4): rocky-logos-httpd-90.14-1.el9.noarch.rpm                  265 kB/s |  24 kB     00:00    
+(3/4): nginx-1.20.1-14.el9_2.1.x86_64.rpm                        352 kB/s |  36 kB     00:00    
+(4/4): nginx-core-1.20.1-14.el9_2.1.x86_64.rpm                   3.7 MB/s | 565 kB     00:00    
+-------------------------------------------------------------------------------------------------
+Total                                                            1.2 MB/s | 634 kB     00:00     
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                         1/1 
+  Running scriptlet: nginx-filesystem-1:1.20.1-14.el9_2.1.noarch                             1/4 
+  Installing       : nginx-filesystem-1:1.20.1-14.el9_2.1.noarch                             1/4 
+  Installing       : nginx-core-1:1.20.1-14.el9_2.1.x86_64                                   2/4 
+  Installing       : rocky-logos-httpd-90.14-1.el9.noarch                                    3/4 
+  Installing       : nginx-1:1.20.1-14.el9_2.1.x86_64                                        4/4 
+  Running scriptlet: nginx-1:1.20.1-14.el9_2.1.x86_64                                        4/4 
+  Verifying        : rocky-logos-httpd-90.14-1.el9.noarch                                    1/4 
+  Verifying        : nginx-filesystem-1:1.20.1-14.el9_2.1.noarch                             2/4 
+  Verifying        : nginx-1:1.20.1-14.el9_2.1.x86_64                                        3/4 
+  Verifying        : nginx-core-1:1.20.1-14.el9_2.1.x86_64                                   4/4 
+
+Installed:
+  nginx-1:1.20.1-14.el9_2.1.x86_64                   nginx-core-1:1.20.1-14.el9_2.1.x86_64       
+  nginx-filesystem-1:1.20.1-14.el9_2.1.noarch        rocky-logos-httpd-90.14-1.el9.noarch        
+
+Complete!
+
+[ahliko@web ~]$ sudo firewall-cmd --add-port=80/tcp --permanent
+success
+[ahliko@web ~]$ sudo firewall-cmd --reload
+success
+[ahliko@web ~]$ sudo firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: enp0s8
+  sources: 
+  services: cockpit dhcpv6-client http ssh
+  ports: 80/tcp
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+[ahliko@web home]$ sudo systemctl start nginx
+
+[ahliko@web ~]$ systemctl status nginx
+● nginx.service - The nginx HTTP and reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: disabled)
+     Active: active (running) since Fri 2023-10-20 10:03:37 CEST; 1min 7s ago
+    Process: 1386 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+    Process: 1387 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=0/SUCCESS)
+    Process: 1388 ExecStart=/usr/sbin/nginx (code=exited, status=0/SUCCESS)
+   Main PID: 1389 (nginx)
+      Tasks: 3 (limit: 48872)
+     Memory: 4.2M
+        CPU: 22ms
+     CGroup: /system.slice/nginx.service
+             ├─1389 "nginx: master process /usr/sbin/nginx"
+             ├─1390 "nginx: worker process"
+             └─1391 "nginx: worker process"
+
+[ahliko@web home]$ sudo systemctl enable nginx
+Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /usr/lib/systemd/system/nginx.service.
+
+Oct 20 10:03:37 web.lan2.tp1 systemd[1]: Starting The nginx HTTP and reverse proxy server...
+Oct 20 10:03:37 web.lan2.tp1 nginx[1387]: nginx: the configuration file /etc/nginx/nginx.conf sy>
+Oct 20 10:03:37 web.lan2.tp1 nginx[1387]: nginx: configuration file /etc/nginx/nginx.conf test i>
+Oct 20 10:03:37 web.lan2.tp1 systemd[1]: Started The nginx HTTP and reverse proxy server.
+
+[ahliko@web ~]$ sudo ss -alnpt | grep 80
+LISTEN 0      511          0.0.0.0:80        0.0.0.0:*    users:(("nginx",pid=1391,fd=6),("nginx",pid=1390,fd=6),("nginx",pid=1389,fd=6))
+LISTEN 0      511             [::]:80           [::]:*    users:(("nginx",pid=1391,fd=7),("nginx",pid=1390,fd=7),("nginx",pid=1389,fd=7))
+
+
+[ahliko@web ~]$ mkdir -p /var/www/site_nul
+[ahliko@web ~]$ sudo chown -R $USER:$USER /var/www/site_nul
+
+[ahliko@web ~]$ cat /var/www/site_nul/index.html
+<html>
+    <head>
+        <title>Welcome to your_domain</title>
+    </head>
+    <body>
+        <h1>Success! Your Nginx server is successfully configured for <em>your_domain</em>. </h1>
+<p>This is a sample page.</p>
+    </body>
+</html>
+
+
+```
+
+
 ☀️ **Sur `node1.lan1.tp2`**
 
 - éditez le fichier `hosts` pour que `site_nul.tp2` pointe vers l'IP de `web.lan2.tp2`
 - visitez le site nul avec une commande `curl` et en utilisant le nom `site_nul.tp2`
+
+```bash
+[ahliko@node1 ~]$ cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+10.1.1.100 node1.lan1.tp2
+10.1.1.253 dhcp.lan1.tp2
+10.1.2.11 node1.lan2.tp2
+10.1.2.12 web.lan2.tp2 site_nul.tp2
+10.1.2.254 router.tp2
+
+[ahliko@node1 ~]$ curl site_nul.tp2
+<html>
+    <head>
+        <title>Welcome to your_domain</title>
+    </head>
+    <body>
+        <h1>Success! Your Nginx server is successfully configured for <em>your_domain</em>. </h1>
+<p>This is a sample page.</p>
+    </body>
+</html>
+
+```
 
 ![That's all folks](./img/thatsall.jpg)
