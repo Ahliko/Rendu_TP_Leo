@@ -1075,7 +1075,7 @@ tar: Removing leading `/' from hard link targets
 /var/www/tp5_nextcloud//themes/example/core/css/
 /var/www/tp5_nextcloud//themes/example/core/css/server.css
 /var/www/tp5_nextcloud//themes/example/defaults.php
-/var/www/tp5_nextcloud//themes/README
+/var/www/tp5_nextcloud//themes/README.md
 The current PHP memory limit is below the recommended value of 512MB.
 Maintenance mode disabled
 
@@ -1115,7 +1115,7 @@ WantedBy=multi-user.target
 
 Jan 31 14:51:22 web.tp6.linux bash[13263]: /var/www/tp5_nextcloud//themes/example/core/css/server.css
 Jan 31 14:51:22 web.tp6.linux bash[13263]: /var/www/tp5_nextcloud//themes/example/defaults.php
-Jan 31 14:51:22 web.tp6.linux bash[13263]: /var/www/tp5_nextcloud//themes/README
+Jan 31 14:51:22 web.tp6.linux bash[13263]: /var/www/tp5_nextcloud//themes/README.md
 Jan 31 14:51:22 web.tp6.linux bash[13263]: tar: Exiting with failure status due to previous errors
 Jan 31 14:51:22 web.tp6.linux bash[13265]: Cannot write into "config" directory!
 Jan 31 14:51:22 web.tp6.linux bash[13265]: This can usually be fixed by giving the web server write access to the config directory.
