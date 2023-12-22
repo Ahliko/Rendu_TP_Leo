@@ -23,6 +23,9 @@
 
 🌞 **`docker-compose.yml`**
 
+127.0.0.1 -> page index.php
+127.0.0.1:8080 -> phpmyadmin
+
 [docker-compose.yml](./docker-compose.yml)
 
 # II Dév. Python
