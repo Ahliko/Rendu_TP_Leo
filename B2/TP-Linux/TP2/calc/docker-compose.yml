@@ -1,0 +1,12 @@
+version: '3'
+services:
+    calc:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: MyCalculatorServer
+        ports:
+            - "13337:13337"
+        environment:
+            - CALC_PORT=13337
+        restart: on-failure
