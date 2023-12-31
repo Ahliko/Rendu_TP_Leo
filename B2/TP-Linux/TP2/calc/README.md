@@ -11,9 +11,9 @@
 Pour installer le projet, il suffit de cloner le dépôt git et de lancer le docker-compose.
 
 ```bash
-$ git clone
-$ cd docker-calculator
+$ git clone https://github.com/Ahliko/Rendu_TP_Leo.git
+$ cd B2/TP-Linux/TP2/calc
 $ docker-compose up -d --build
 ```
 
-If you want to change the port, you can change the port in the docker-compose.yml file.
+Si vous voulez changer le port, vous pouvez changer le port dans le fichier docker-compose.yml.

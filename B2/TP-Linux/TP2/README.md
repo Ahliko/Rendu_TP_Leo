@@ -77,7 +77,7 @@ Step 8/12 : RUN pip install psutil
 Step 9/12 : WORKDIR /app
  ---> Using cache
  ---> 8cc4423a35f1
-Step 10/12 : COPY calc.py /app
+Step 10/12 : COPY chat.py /app
  ---> 241adf6a288c
 Step 11/12 : RUN mkdir /var/log/bs_server -m 700 && touch /var/log/bs_server/bs_server.log && chmod 600 /var/log/bs_server/bs_server.log
  ---> Running in 185dba393b7f
@@ -113,34 +113,56 @@ c36f999c2d7eb0ee74de83df11266fd3db97d5b5c52025f38c54c994227ac1aa
 
 ## 2. Chat room
 
-![Cat Whale](./img/cat_whale.png)
-
 🌞 **Packager l'application de chat room**
 
-- pareil : on package le serveur
-- `Dockerfile` et `docker-compose.yml`
-- code adapté :
-  - logs en sortie standard
-  - variable d'environnement `CHAT_PORT` pour le port d'écoute
-  - variable d'environnement `MAX_USERS` pour limiter le nombre de users dans chaque room (ou la room s'il y en a qu'une)
-- encore un README propre qui montre comment build et comment run (en démontrant l'utilisation des variables d'environnement)
+```bash
+ ⚙ ahliko@ahliko-PC  [v] 3.11.6  ~/.../TP2/chat   main ●  docker compose up --build
+[+] Building 1.3s (12/12) FINISHED                                                                                                                           docker:default
+ => [chat internal] load build definition from Dockerfile                                                                                                              0.0s
+ => => transferring dockerfile: 252B                                                                                                                                   0.0s
+ => [chat internal] load .dockerignore                                                                                                                                 0.0s
+ => => transferring context: 2B                                                                                                                                        0.0s
+ => [chat internal] load metadata for docker.io/library/python:3.11.7                                                                                                  1.2s
+ => [chat 1/7] FROM docker.io/library/python:3.11.7@sha256:4e5e9b05dda9cf699084f20bb1d3463234446387fa0f7a45d90689c48e204c83                                            0.0s
+ => [chat internal] load build context                                                                                                                                 0.0s
+ => => transferring context: 29B                                                                                                                                       0.0s
+ => CACHED [chat 2/7] RUN pip install --upgrade pip                                                                                                                    0.0s
+ => CACHED [chat 3/7] RUN pip install colorlog                                                                                                                         0.0s
+ => CACHED [chat 4/7] RUN pip install redis                                                                                                                            0.0s
+ => CACHED [chat 5/7] RUN pip install websockets                                                                                                                       0.0s
+ => CACHED [chat 6/7] WORKDIR /app                                                                                                                                     0.0s
+ => CACHED [chat 7/7] COPY chat.py /app                                                                                                                                0.0s
+ => [chat] exporting to image                                                                                                                                          0.0s
+ => => exporting layers                                                                                                                                                0.0s
+ => => writing image sha256:aaab557600871db8f493ede8a7c592f3c99bc84fe8495c85c85ddbc00541a77e                                                                           0.0s
+ => => naming to docker.io/library/chat-chat                                                                                                                           0.0s
+[+] Running 3/3
+ ✔ Network chat_default        Created                                                                                                                                 0.1s 
+ ✔ Container MyChatRoomDB      Created                                                                                                                                 0.1s 
+ ✔ Container MyChatRoomServer  Created                                                                                                                                 0.1s 
+Attaching to MyChatRoomDB, MyChatRoomServer
+MyChatRoomDB      | 1:C 31 Dec 2023 19:16:27.290 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+MyChatRoomDB      | 1:C 31 Dec 2023 19:16:27.290 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+MyChatRoomDB      | 1:C 31 Dec 2023 19:16:27.290 * Redis version=7.2.3, bits=64, commit=00000000, modified=0, pid=1, just started
+MyChatRoomDB      | 1:C 31 Dec 2023 19:16:27.290 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
+MyChatRoomDB      | 1:M 31 Dec 2023 19:16:27.290 * monotonic clock: POSIX clock_gettime
+MyChatRoomDB      | 1:M 31 Dec 2023 19:16:27.290 * Running mode=standalone, port=6379.
+MyChatRoomDB      | 1:M 31 Dec 2023 19:16:27.291 * Server initialized
+MyChatRoomDB      | 1:M 31 Dec 2023 19:16:27.291 * Ready to accept connections tcp
+MyChatRoomServer  | 2023-12-31 19:16:27 INFO server listening on 0.0.0.0:8888
+MyChatRoomServer  | 2023-12-31 19:17:36 INFO connection open
+MyChatRoomServer  | 2023-12-31 19:17:36 INFO New client : ('172.31.0.1', 38904)
+MyChatRoomServer  | 2023-12-31 19:17:41 INFO Message received from 172.31.0.1:38904 : 'ciu'
+MyChatRoomServer  | 2023-12-31 19:17:42 INFO Message received from 172.31.0.1:38904 : 'dazd'
+MyChatRoomServer  | 2023-12-31 19:17:42 INFO Message received from 172.31.0.1:38904 : 'zad'
+MyChatRoomServer  | 2023-12-31 19:17:42 INFO Message received from 172.31.0.1:38904 : 'azd'
+MyChatRoomServer  | 2023-12-31 19:17:42 INFO Message received from 172.31.0.1:38904 : 'a'
+MyChatRoomServer  | 2023-12-31 19:17:42 INFO Message received from 172.31.0.1:38904 : 'd'
+MyChatRoomServer  | 2023-12-31 19:17:43 INFO Message received from 172.31.0.1:38904 : 'dz'
+MyChatRoomServer  | 2023-12-31 19:18:56 INFO Client ahliko disconnected
+MyChatRoomServer  | 2023-12-31 19:18:56 INFO connection closed
+```
 
 📜 **Dossier `tp2/chat/` dans le dépôt git de rendu**
 
-- `Dockerfile`
-- `docker-compose.yml`
-- `README.md`
-- `chat.py` : le code de l'app chat room
-
-➜ **J'espère que ces cours vous ont apporté du recul sur la relation client/serveur**
-
-- deux programmes distincts, chacun a son rôle
-  - le serveur
-    - est le gardien de la logique, le maître du jeu, garant du respect des règles
-    - c'est votre bébé vous le maîtrisez
-    - opti et sécu en tête
-  - le client c'est... le client
-    - faut juste qu'il soit joooooli
-    - garder à l'esprit que n'importe qui peut le modifier ou l'adapter
-    - ou carrément dév son propre client
-- y'a même des milieux comme le web, où les gars qui dév les serveurs (Apache, NGINX, etc) c'est pas DU TOUT les mêmes qui dévs les clients (navigateurs Web, `curl`, librairie `requests` en Python, etc)
+[dossier chat](./chat)
